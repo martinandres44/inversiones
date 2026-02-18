@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trackeo de Inversiones - Fondos</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        input { width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .total-row { font-weight: bold; background: #e9ecef; }
+        .val-total { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📊 Mis Fondos Comunes (FCI)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fondo / Código</th>
+                <th>Cantidad</th>
+                <th>Precio (NAV)</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody id="funds-body">
+            </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">Total Fondos:</td>
+                <td id="grand-total-funds" class="val-total">$0.00</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    // Tus datos reales según las imágenes
+    const myFunds = [
+        { name: "Federated Hermes", code: "FORS", qty: 3819.89 },
+        { name: "Janus Henderson", code: "G5S1BZ639", qty: 5034.388 },
+        { name: "Allianz Income", code: "L016D6246", qty: 6315.422 },
+        { name: "Franklin Global", code: "L40598481", qty: 7418.468 },
+        { name: "MFS Meridian", code: "L6366X224", qty: 9179.767 },
+        { name: "Morgan Stanley", code: "L65228550", qty: 267.019 }
+    ];
+
+    // Cargar precios guardados previamente
+    const savedPrices = JSON.parse(localStorage.getItem('fundPrices')) || {};
+
+    function renderFunds() {
+        const body = document.getElementById('funds-body');
+        let grandTotal = 0;
+
+        body.innerHTML = myFunds.map(fund => {
+            const price = savedPrices[fund.code] || 0;
+            const subtotal = fund.qty * price;
+            grandTotal += subtotal;
+
+            return `
+                <tr>
+                    <td><strong>${fund.name}</strong><br><small>${fund.code}</small></td>
+                    <td>${fund.qty.toLocaleString('es-AR')}</td>
+                    <td>
+                        <input type="number" step="0.0001" value="${price}" 
+                               onchange="updatePrice('${fund.code}', this.value)">
+                    </td>
+                    <td class="val-total">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('grand-total-funds').innerText = `$${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+    }
+
+    function updatePrice(code, newPrice) {
+        savedPrices[code] = parseFloat(newPrice) || 0;
+        localStorage.setItem('fundPrices', JSON.stringify(savedPrices));
+        renderFunds(); // Refrescar cálculos
+    }
+
+    // Inicializar
+    renderFunds();
+</script>
+
+</body>
+</html>
