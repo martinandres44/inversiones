@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inversiones Martín - Dashboard</title>
+    <title>Dashboard de Inversiones</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; color: #333; padding: 20px; }
         .container { max-width: 1000px; margin: auto; }
@@ -25,12 +25,12 @@
 
 <div class="container">
     <div class="header">
-        <small>PATRIMONIO TOTAL CONSOLIDADO</small>
+        <small>VALOR TOTAL DE CARTERA</small>
         <h1 id="total-general">$0,00</h1>
     </div>
 
     <div class="card">
-        <h2>📈 Acciones & Cripto (Live)</h2>
+        <h2>📈 Acciones y Criptomonedas</h2>
         <div style="margin-bottom: 15px;">
             <input type="text" id="tk-name" placeholder="Ticker (ej: AAPL)">
             <input type="number" id="tk-qty" placeholder="Cantidad">
@@ -52,37 +52,35 @@
     </div>
 
     <div class="card" style="border-left: 5px solid #e67e22;">
-        <h2>🏦 Mutual Funds - Martín</h2>
+        <h2>🏦 Cartera de Fondos A</h2>
         <table>
             <thead>
                 <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
-            <tbody id="martin-body"></tbody>
+            <tbody id="cartera-a-body"></tbody>
         </table>
-        <div class="section-total" id="sub-martin">Subtotal Martín: $0,00</div>
+        <div class="section-total" id="sub-a">Subtotal A: $0,00</div>
     </div>
 
     <div class="card" style="border-left: 5px solid #3498db;">
-        <h2>🏦 Mutual Funds - Jorge</h2>
+        <h2>🏦 Cartera de Fondos B</h2>
         <table>
             <thead>
                 <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
-            <tbody id="jorge-body"></tbody>
+            <tbody id="cartera-b-body"></tbody>
         </table>
-        <div class="section-total" id="sub-jorge">Subtotal Jorge: $0,00</div>
+        <div class="section-total" id="sub-b">Subtotal B: $0,00</div>
     </div>
 </div>
 
 <script>
-    // 1. Datos iniciales
     let myStocks = JSON.parse(localStorage.getItem('myStocks')) || [
         {ticker:'ASTS', qty:100}, {ticker:'IREN', qty:50}, {ticker:'PLTR', qty:30}
     ];
     let stockPrices = {};
 
-    // Cantidades Martín (image_f2da5b.png)
-    const martinData = [
+    const dataA = [
         {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00}, {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
         {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80}, {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
         {n:"Thornburg", c:"G8T49N198", q:1157.025, p:36.41}, {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
@@ -91,8 +89,7 @@
         {n:"Morgan Stanley", c:"L65228550", q:131.543, p:149.63}
     ];
 
-    // Cantidades Jorge (image_f2780b.png / image_f278a3.png)
-    const jorgeData = [
+    const dataB = [
         {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00}, {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
         {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68}, {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
         {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69}, {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
@@ -103,12 +100,23 @@
     async function fetchPrices() {
         for (let s of myStocks) {
             try {
-                const proxy = "https://corsproxy.io/?";
-                const url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${s.ticker}`);
-                const res = await fetch(proxy + url);
-                const data = await res.json();
-                stockPrices[s.ticker] = data.chart.result[0].meta.regularMarketPrice;
-            } catch (e) { stockPrices[s.ticker] = stockPrices[s.ticker] || 0; }
+                const target = `https://query1.finance.yahoo.com/v8/finance/chart/${s.ticker}`;
+                const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&timestamp=${Date.now()}`;
+                
+                const response = await fetch(proxy);
+                const json = await response.json();
+                
+                if (json.contents) {
+                    const data = JSON.parse(json.contents);
+                    if (data.chart && data.chart.result && data.chart.result[0]) {
+                        const meta = data.chart.result[0].meta;
+                        stockPrices[s.ticker] = meta.regularMarketPrice || meta.previousClose || 0;
+                    }
+                }
+            } catch (e) {
+                console.error("Error obteniendo precio para " + s.ticker, e);
+                stockPrices[s.ticker] = stockPrices[s.ticker] || 0;
+            }
         }
         render();
     }
@@ -130,7 +138,7 @@
     }
 
     function render() {
-        let totalS = 0, totalM = 0, totalJ = 0;
+        let totalS = 0, totalA = 0, totalB = 0;
 
         // ACCIONES
         document.getElementById('stocks-body').innerHTML = myStocks.map((s, i) => {
@@ -141,27 +149,27 @@
         }).join('');
         document.getElementById('sub-stocks').innerText = `Subtotal Acciones: $${fmt(totalS)}`;
 
-        // MARTÍN
-        document.getElementById('martin-body').innerHTML = martinData.map(f => {
+        // CARTERA A
+        document.getElementById('cartera-a-body').innerHTML = dataA.map(f => {
             const sub = f.p * f.q;
-            totalM += sub;
+            totalA += sub;
             return `<tr><td>${f.n}<br><span class="fci-tag">${f.c}</span></td><td>${f.q.toLocaleString()}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-martin').innerText = `Subtotal Martín: $${fmt(totalM)}`;
+        document.getElementById('sub-a').innerText = `Subtotal A: $${fmt(totalA)}`;
 
-        // JORGE
-        document.getElementById('jorge-body').innerHTML = jorgeData.map(f => {
+        // CARTERA B
+        document.getElementById('cartera-b-body').innerHTML = dataB.map(f => {
             const sub = f.p * f.q;
-            totalJ += sub;
+            totalB += sub;
             return `<tr><td>${f.n}<br><span class="fci-tag">${f.c}</span></td><td>${f.q.toLocaleString()}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $${fmt(totalJ)}`;
+        document.getElementById('sub-b').innerText = `Subtotal B: $${fmt(totalB)}`;
 
-        document.getElementById('total-general').innerText = `$${fmt(totalS + totalM + totalJ)}`;
+        document.getElementById('total-general').innerText = `$${fmt(totalS + totalA + totalB)}`;
     }
 
     fetchPrices();
-    setInterval(fetchPrices, 300000);
+    setInterval(fetchPrices, 300000); // Actualiza cada 5 minutos
 </script>
 </body>
 </html>
