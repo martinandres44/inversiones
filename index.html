@@ -2,49 +2,43 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Inversiones</title>
+    <title>Inversiones Martín - Full Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; color: #333; padding: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
         .container { max-width: 1000px; margin: auto; }
-        .header { background: #2c3e50; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #95a5a6; font-size: 11px; padding: 10px; text-transform: uppercase; }
+        .header { background: #2c3e50; color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; color: #95a5a6; font-size: 11px; text-transform: uppercase; padding: 10px; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-right: 5px; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 100px; }
         .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: #3498db; color: white; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; font-size: 11px; }
+        .btn-add { background: #3498db; color: white; margin-left: 10px; }
+        .btn-del { background: #e74c3c; color: white; font-size: 10px; padding: 5px; }
         .subtotal { font-weight: bold; color: #27ae60; text-align: right; }
-        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
-        .fci-tag { font-size: 10px; background: #ecf0f1; padding: 2px 5px; border-radius: 4px; color: #7f8c8d; }
+        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; border-top: 2px solid #eee; padding-top: 10px; }
+        .loading-text { font-size: 0.8em; color: #f39c12; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <small>VALOR TOTAL DE CARTERA</small>
+        <small>PATRIMONIO TOTAL CONSOLIDADO</small>
         <h1 id="total-general">$0,00</h1>
     </div>
 
     <div class="card">
-        <h2>📈 Acciones y Criptomonedas</h2>
+        <h2>📈 Acciones & Cripto (Yahoo Finance)</h2>
         <div style="margin-bottom: 15px;">
-            <input type="text" id="tk-name" placeholder="Ticker (ej: AAPL)">
-            <input type="number" id="tk-qty" placeholder="Cantidad">
+            <input type="text" id="new-tk" placeholder="Ticker (AAPL)">
+            <input type="number" id="new-qty" placeholder="Cantidad">
             <button class="btn btn-add" onclick="addStock()">+ Agregar</button>
         </div>
         <table>
             <thead>
-                <tr>
-                    <th>Activo</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th style="text-align: right;">Subtotal</th>
-                    <th></th>
-                </tr>
+                <tr><th>Ticker</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th><th></th></tr>
             </thead>
             <tbody id="stocks-body"></tbody>
         </table>
@@ -52,82 +46,84 @@
     </div>
 
     <div class="card" style="border-left: 5px solid #e67e22;">
-        <h2>🏦 Cartera de Fondos A</h2>
+        <h2>🏦 Mutual Funds - Martín</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo / Código</th><th>Cantidad</th><th>NAV (Precio)</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
-            <tbody id="cartera-a-body"></tbody>
+            <tbody id="martin-body"></tbody>
         </table>
-        <div class="section-total" id="sub-a">Subtotal A: $0,00</div>
+        <div class="section-total" id="sub-martin">Subtotal Martín: $0,00</div>
     </div>
 
     <div class="card" style="border-left: 5px solid #3498db;">
-        <h2>🏦 Cartera de Fondos B</h2>
+        <h2>🏦 Mutual Funds - Jorge</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo / Código</th><th>Cantidad</th><th>NAV (Precio)</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
-            <tbody id="cartera-b-body"></tbody>
+            <tbody id="jorge-body"></tbody>
         </table>
-        <div class="section-total" id="sub-b">Subtotal B: $0,00</div>
+        <div class="section-total" id="sub-jorge">Subtotal Jorge: $0,00</div>
     </div>
 </div>
 
 <script>
+    // 1. DATA DE MARTÍN
+    const martinData = [
+        {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00},
+        {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
+        {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80},
+        {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
+        {n:"Thornburg Global", c:"G8T49N198", q:1157.025, p:36.41},
+        {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
+        {n:"Ab Sicav I", c:"L0173W230", q:620.444, p:68.29},
+        {n:"Franklin U.S. Opp", c:"L4058Y329", q:357.654, p:55.32},
+        {n:"Franklin Global Conv", c:"L40598481", q:2128.218, p:18.13},
+        {n:"MFS Meridian Prudent", c:"L6366X224", q:3353.097, p:14.69},
+        {n:"Morgan Stanley Global", c:"L65228550", q:131.543, p:149.63}
+    ];
+
+    // 2. DATA DE JORGE
+    const jorgeData = [
+        {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00},
+        {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
+        {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68},
+        {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
+        {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69},
+        {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
+    ];
+
     let myStocks = JSON.parse(localStorage.getItem('myStocks')) || [
         {ticker:'ASTS', qty:100}, {ticker:'IREN', qty:50}, {ticker:'PLTR', qty:30}
     ];
     let stockPrices = {};
 
-    const dataA = [
-        {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00}, {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
-        {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80}, {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
-        {n:"Thornburg", c:"G8T49N198", q:1157.025, p:36.41}, {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
-        {n:"Ab Sicav I", c:"L0173W230", q:620.444, p:68.29}, {n:"Franklin U.S.", c:"L4058Y329", q:357.654, p:55.32},
-        {n:"Franklin Conv.", c:"L40598481", q:2128.218, p:18.13}, {n:"Mfs Meridian", c:"L6366X224", q:3353.097, p:14.69},
-        {n:"Morgan Stanley", c:"L65228550", q:131.543, p:149.63}
-    ];
-
-    const dataB = [
-        {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00}, {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
-        {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68}, {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
-        {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69}, {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
-    ];
-
     const fmt = (v) => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-    async function fetchPrices() {
+    async function getPrice(ticker) {
+        try {
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + ticker)}`);
+            const json = await res.json();
+            const data = JSON.parse(json.contents);
+            return data.chart.result[0].meta.regularMarketPrice || 0;
+        } catch (e) { return 0; }
+    }
+
+    async function updateStockPrices() {
         for (let s of myStocks) {
-            try {
-                const target = `https://query1.finance.yahoo.com/v8/finance/chart/${s.ticker}`;
-                const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&timestamp=${Date.now()}`;
-                
-                const response = await fetch(proxy);
-                const json = await response.json();
-                
-                if (json.contents) {
-                    const data = JSON.parse(json.contents);
-                    if (data.chart && data.chart.result && data.chart.result[0]) {
-                        const meta = data.chart.result[0].meta;
-                        stockPrices[s.ticker] = meta.regularMarketPrice || meta.previousClose || 0;
-                    }
-                }
-            } catch (e) {
-                console.error("Error obteniendo precio para " + s.ticker, e);
-                stockPrices[s.ticker] = stockPrices[s.ticker] || 0;
-            }
+            stockPrices[s.ticker] = await getPrice(s.ticker);
+            render(); // Renderiza cada vez que llega un precio nuevo
         }
-        render();
     }
 
     function addStock() {
-        const t = document.getElementById('tk-name').value.toUpperCase().trim();
-        const q = parseFloat(document.getElementById('tk-qty').value);
+        const t = document.getElementById('new-tk').value.toUpperCase().trim();
+        const q = parseFloat(document.getElementById('new-qty').value);
         if(t && q) {
             myStocks.push({ticker:t, qty:q});
             localStorage.setItem('myStocks', JSON.stringify(myStocks));
-            fetchPrices();
+            updateStockPrices();
         }
     }
 
@@ -138,38 +134,39 @@
     }
 
     function render() {
-        let totalS = 0, totalA = 0, totalB = 0;
+        let totalS = 0, totalM = 0, totalJ = 0;
 
-        // ACCIONES
+        // RENDER ACCIONES
         document.getElementById('stocks-body').innerHTML = myStocks.map((s, i) => {
             const p = stockPrices[s.ticker] || 0;
             const sub = p * s.qty;
             totalS += sub;
-            return `<tr><td><b>${s.ticker}</b></td><td>${s.qty}</td><td>$${p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td><td><button class="btn btn-del" onclick="removeStock(${i})">x</button></td></tr>`;
+            return `<tr><td><b>${s.ticker}</b></td><td>${s.qty}</td><td>${p ? '$'+p.toFixed(2) : '<span class="loading-text">Cargando...</span>'}</td><td class="subtotal">$${fmt(sub)}</td><td><button class="btn btn-del" onclick="removeStock(${i})">x</button></td></tr>`;
         }).join('');
         document.getElementById('sub-stocks').innerText = `Subtotal Acciones: $${fmt(totalS)}`;
 
-        // CARTERA A
-        document.getElementById('cartera-a-body').innerHTML = dataA.map(f => {
+        // RENDER MARTÍN
+        document.getElementById('martin-body').innerHTML = martinData.map(f => {
             const sub = f.p * f.q;
-            totalA += sub;
-            return `<tr><td>${f.n}<br><span class="fci-tag">${f.c}</span></td><td>${f.q.toLocaleString()}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
+            totalM += sub;
+            return `<tr><td>${f.n}<br><small>${f.c}</small></td><td>${f.q.toLocaleString('es-AR')}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-a').innerText = `Subtotal A: $${fmt(totalA)}`;
+        document.getElementById('sub-martin').innerText = `Subtotal Martín: $${fmt(totalM)}`;
 
-        // CARTERA B
-        document.getElementById('cartera-b-body').innerHTML = dataB.map(f => {
+        // RENDER JORGE
+        document.getElementById('jorge-body').innerHTML = jorgeData.map(f => {
             const sub = f.p * f.q;
-            totalB += sub;
-            return `<tr><td>${f.n}<br><span class="fci-tag">${f.c}</span></td><td>${f.q.toLocaleString()}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
+            totalJ += sub;
+            return `<tr><td>${f.n}<br><small>${f.c}</small></td><td>${f.q.toLocaleString('es-AR')}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-b').innerText = `Subtotal B: $${fmt(totalB)}`;
+        document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $${fmt(totalJ)}`;
 
-        document.getElementById('total-general').innerText = `$${fmt(totalS + totalA + totalB)}`;
+        document.getElementById('total-general').innerText = `$${fmt(totalS + totalM + totalJ)}`;
     }
 
-    fetchPrices();
-    setInterval(fetchPrices, 300000); // Actualiza cada 5 minutos
+    // Iniciar
+    render();
+    updateStockPrices();
 </script>
 </body>
 </html>
