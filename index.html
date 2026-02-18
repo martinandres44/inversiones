@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <title>Inversiones Martín - Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; color: #333; padding: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
         .container { max-width: 1000px; margin: auto; }
         .header { background: #1a2a3a; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
-        .jorge-card { border-left: 5px solid #95a5a6; opacity: 0.85; }
+        .jorge-card { border-left: 5px solid #95a5a6; background: #fafafa; }
         .martin-card { border-left: 5px solid #e67e22; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: #95a5a6; font-size: 11px; padding: 10px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-right: 5px; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 120px; }
         .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #3498db; color: white; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 10px; font-size: 11px; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 10px; }
         .subtotal { font-weight: bold; color: #27ae60; text-align: right; }
         .section-total { text-align: right; font-weight: bold; font-size: 1.1em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
-        .loading-text { color: #f39c12; font-style: italic; font-size: 0.8em; }
+        .loading { color: #f39c12; font-size: 0.8em; font-style: italic; }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
     </div>
 
     <div class="card">
-        <h2>📈 Acciones & Cripto (Live)</h2>
+        <h2>📈 Acciones & Cripto</h2>
         <div style="margin-bottom: 15px;">
             <input type="text" id="tk-name" placeholder="Ticker (ej: AAPL)">
             <input type="number" id="tk-qty" placeholder="Cantidad">
@@ -57,7 +57,7 @@
         <h2>🏦 Mutual Funds - Martín</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo</th><th>Cantidad</th><th>Precio (NAV)</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
             <tbody id="martin-body"></tbody>
         </table>
@@ -65,10 +65,10 @@
     </div>
 
     <div class="card jorge-card">
-        <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
+        <h2>🏦 Mutual Funds - Jorge (Excluido del Total)</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo</th><th>Cantidad</th><th>Precio (NAV)</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
             <tbody id="jorge-body"></tbody>
         </table>
@@ -77,45 +77,53 @@
 </div>
 
 <script>
-    // 1. Datos de Acciones (del archivo image_f43add.png)
+    // 1. Datos de Martín (Extraídos de image_f2da5b.png)
+    const martinFunds = [
+        {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00},
+        {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
+        {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80},
+        {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
+        {n:"Thornburg Global", c:"G8T49N198", q:1157.025, p:36.41},
+        {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
+        {n:"Ab Sicav I", c:"L0173W230", q:620.444, p:68.29},
+        {n:"Franklin U.S. Opp", c:"L4058Y329", q:357.654, p:55.32},
+        {n:"Franklin Global Conv", c:"L40598481", q:2128.218, p:18.13},
+        {n:"MFS Meridian", c:"L6366X224", q:3353.097, p:14.69},
+        {n:"Morgan Stanley", c:"L65228550", q:131.543, p:149.63}
+    ];
+
+    // 2. Datos de Jorge (Extraídos de image_f2780b.png y image_f278a3.png)
+    const jorgeFunds = [
+        {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00},
+        {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
+        {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68},
+        {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
+        {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69},
+        {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
+    ];
+
     let myStocks = JSON.parse(localStorage.getItem('myStocks')) || [
         {ticker:'ASTS', qty:100}, {ticker:'IREN', qty:50}, {ticker:'PLTR', qty:30},
         {ticker:'LMND', qty:300}, {ticker:'AFRM', qty:375}
     ];
     let stockPrices = {};
 
-    // 2. Datos Martín (del archivo image_f2da5b.png)
-    const martinFunds = [
-        {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00}, {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
-        {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80}, {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
-        {n:"Thornburg", c:"G8T49N198", q:1157.025, p:36.41}, {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
-        {n:"Ab Sicav I", c:"L0173W230", q:620.444, p:68.29}, {n:"Franklin U.S.", c:"L4058Y329", q:357.654, p:55.32},
-        {n:"Franklin Conv.", c:"L40598481", q:2128.218, p:18.13}, {n:"MFS Meridian", c:"L6366X224", q:3353.097, p:14.69},
-        {n:"Morgan Stanley", c:"L65228550", q:131.543, p:149.63}
-    ];
-
-    // 3. Datos Jorge (del archivo image_f2780b.png y image_f278a3.png)
-    const jorgeFunds = [
-        {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00}, {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
-        {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68}, {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
-        {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69}, {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
-    ];
-
     const fmt = (v) => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     async function fetchPrices() {
         for (let s of myStocks) {
             try {
-                // Usando un proxy diferente para mayor estabilidad
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+s.ticker)}`);
+                // Cambiamos el proxy para intentar forzar la carga
+                const proxy = "https://api.allorigins.win/get?url=";
+                const target = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${s.ticker}`);
+                const res = await fetch(proxy + target + "&dt=" + Date.now());
                 const json = await res.json();
                 const data = JSON.parse(json.contents);
                 stockPrices[s.ticker] = data.chart.result[0].meta.regularMarketPrice;
             } catch (e) { 
-                console.error("Error cargando " + s.ticker);
                 stockPrices[s.ticker] = stockPrices[s.ticker] || 0; 
             }
-            render(); // Renderiza uno por uno para no mostrar todo en cero al inicio
+            render(); 
         }
     }
 
@@ -143,7 +151,13 @@
             const p = stockPrices[s.ticker] || 0;
             const sub = p * s.qty;
             totalS += sub;
-            return `<tr><td><b>${s.ticker}</b></td><td>${s.qty}</td><td>${p ? '$'+p.toFixed(2) : '<span class="loading-text">Cargando...</span>'}</td><td class="subtotal">$${fmt(sub)}</td><td><button class="btn btn-del" onclick="removeStock(${i})">x</button></td></tr>`;
+            return `<tr>
+                <td><b>${s.ticker}</b></td>
+                <td>${s.qty}</td>
+                <td>${p ? '$'+p.toFixed(2) : '<span class="loading">Buscando...</span>'}</td>
+                <td class="subtotal">$${fmt(sub)}</td>
+                <td><button class="btn btn-del" onclick="removeStock(${i})">x</button></td>
+            </tr>`;
         }).join('');
         document.getElementById('sub-stocks').innerText = `Subtotal Acciones: $${fmt(totalS)}`;
 
@@ -163,13 +177,12 @@
         }).join('');
         document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $${fmt(totalJ)}`;
 
-        // TOTAL GENERAL (SOLO MARTÍN + ACCIONES)
-        const grandTotal = totalS + totalM;
-        document.getElementById('total-general').innerText = `$${fmt(grandTotal)}`;
+        // TOTAL GENERAL (SOLO ACCIONES + MARTÍN)
+        document.getElementById('total-general').innerText = `$${fmt(totalS + totalM)}`;
     }
 
+    render();
     fetchPrices();
-    setInterval(fetchPrices, 300000); // 5 min
 </script>
 </body>
 </html>
