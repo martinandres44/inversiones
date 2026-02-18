@@ -2,45 +2,74 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Trackeo de Inversiones - Fondos</title>
+    <title>Dashboard Inversiones - Martín</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
-        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #7f8c8d; font-size: 12px; padding: 10px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-        input { width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        .total-row { font-weight: bold; background: #e9ecef; }
-        .val-total { color: #28a745; font-weight: bold; }
+        input { width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+        .price { font-weight: bold; color: #2c3e50; }
+        .subtotal { font-weight: bold; color: #27ae60; }
+        .fci-code { font-size: 11px; color: #95a5a6; display: block; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📊 Mis Fondos Comunes (FCI)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Fondo / Código</th>
-                <th>Cantidad</th>
-                <th>Precio (NAV)</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody id="funds-body">
-            </tbody>
-        <tfoot>
-            <tr class="total-row">
-                <td colspan="3" style="text-align: right;">Total Fondos:</td>
-                <td id="grand-total-funds" class="val-total">$0.00</td>
-            </tr>
-        </tfoot>
-    </table>
+<div class="container">
+    <div class="header">
+        <small>VALOR TOTAL DE CARTERA</small>
+        <h1 id="total-general">$0.00</h1>
+    </div>
+
+    <div class="card">
+        <h2>📈 Acciones & Crypto (Auto)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Activo</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="stocks-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>🏦 Fondos Internacionales</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fondo</th>
+                    <th>Cantidad</th>
+                    <th>Precio (NAV)</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="funds-body">
+                </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Tus datos reales según las imágenes
+    // 1. Configuración de Acciones (Yahoo Tickers)
+    // Agregá o quitá tickers según lo que tengas
+    const myStocks = [
+        { ticker: 'ASTS', qty: 100 },
+        { ticker: 'IREN', qty: 50 },
+        { ticker: 'PLTR', qty: 30 },
+        { ticker: 'BTC-USD', qty: 0.05 }
+    ];
+
+    // 2. Configuración de Fondos (Tus cantidades reales de la imagen)
     const myFunds = [
         { name: "Federated Hermes", code: "FORS", qty: 3819.89 },
         { name: "Janus Henderson", code: "G5S1BZ639", qty: 5034.388 },
@@ -50,42 +79,79 @@
         { name: "Morgan Stanley", code: "L65228550", qty: 267.019 }
     ];
 
-    // Cargar precios guardados previamente
-    const savedPrices = JSON.parse(localStorage.getItem('fundPrices')) || {};
+    let fundPrices = JSON.parse(localStorage.getItem('fundPrices')) || {};
+    let stockData = {};
 
-    function renderFunds() {
-        const body = document.getElementById('funds-body');
-        let grandTotal = 0;
+    // Función para traer precios de Yahoo Finance usando un Proxy
+    async function getYahooPrice(ticker) {
+        try {
+            const proxy = "https://corsproxy.io/?";
+            const url = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
+            const response = await fetch(proxy + url);
+            const data = await response.json();
+            return data.chart.result[0].meta.regularMarketPrice;
+        } catch (e) {
+            console.error("Error con " + ticker, e);
+            return 0;
+        }
+    }
 
-        body.innerHTML = myFunds.map(fund => {
-            const price = savedPrices[fund.code] || 0;
-            const subtotal = fund.qty * price;
-            grandTotal += subtotal;
+    async function updateAll() {
+        // Actualizar Stocks
+        let totalS = 0;
+        const stockPromises = myStocks.map(async (s) => {
+            const price = await getYahooPrice(s.ticker);
+            stockData[s.ticker] = price;
+            return price * s.qty;
+        });
+        
+        const subtotalesS = await Promise.all(stockPromises);
+        totalS = subtotalesS.reduce((a, b) => a + b, 0);
 
-            return `
-                <tr>
-                    <td><strong>${fund.name}</strong><br><small>${fund.code}</small></td>
-                    <td>${fund.qty.toLocaleString('es-AR')}</td>
-                    <td>
-                        <input type="number" step="0.0001" value="${price}" 
-                               onchange="updatePrice('${fund.code}', this.value)">
-                    </td>
-                    <td class="val-total">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
-                </tr>
-            `;
+        render(totalS);
+    }
+
+    function render(totalStocks) {
+        // Render Stocks
+        document.getElementById('stocks-body').innerHTML = myStocks.map(s => {
+            const price = stockData[s.ticker] || 0;
+            const sub = price * s.qty;
+            return `<tr>
+                <td><strong>${s.ticker}</strong></td>
+                <td>${s.qty}</td>
+                <td class="price">$${price.toFixed(2)}</td>
+                <td class="subtotal">$${sub.toLocaleString()}</td>
+            </tr>`;
         }).join('');
 
-        document.getElementById('grand-total-funds').innerText = `$${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+        // Render Fondos
+        let totalF = 0;
+        document.getElementById('funds-body').innerHTML = myFunds.map(f => {
+            const price = fundPrices[f.code] || 0;
+            const sub = price * f.qty;
+            totalF += sub;
+            return `<tr>
+                <td><strong>${f.name}</strong><span class="fci-code">${f.code}</span></td>
+                <td>${f.qty.toLocaleString()}</td>
+                <td><input type="number" step="0.0001" value="${price}" onchange="saveFundPrice('${f.code}', this.value)"></td>
+                <td class="subtotal">$${sub.toLocaleString()}</td>
+            </tr>`;
+        }).join('');
+
+        const grandTotal = totalStocks + totalF;
+        document.getElementById('total-general').innerText = `$${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
     }
 
-    function updatePrice(code, newPrice) {
-        savedPrices[code] = parseFloat(newPrice) || 0;
-        localStorage.setItem('fundPrices', JSON.stringify(savedPrices));
-        renderFunds(); // Refrescar cálculos
+    function saveFundPrice(code, val) {
+        fundPrices[code] = parseFloat(val) || 0;
+        localStorage.setItem('fundPrices', JSON.stringify(fundPrices));
+        updateAll(); // Recalcular todo
     }
 
-    // Inicializar
-    renderFunds();
+    // Ejecutar al iniciar
+    updateAll();
+    // Actualizar cada 5 minutos
+    setInterval(updateAll, 300000);
 </script>
 
 </body>
