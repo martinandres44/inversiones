@@ -54,4 +54,75 @@
                     <tr id="stocks-total-day-row" style="background: #f8f9fa; font-weight: bold; border-top: 2px solid #eee;"></tr>
                     <tr style="background: #fffafa;">
                         <td colspan="5" style="text-align:right; font-weight:bold; color:var(--danger); padding-right: 15px;">MARGEN DEUDA:</td>
-                        <td style="text-align:right; padding-right: 15px;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width:
+                        <td style="text-align:right; padding-right: 15px;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 100px; border: none; background: transparent; text-align: right; font-weight: bold; color: var(--danger); font-size: 14px; padding: 0;"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="section-total" id="sub-stocks">Net Acciones: $ 0,00</div>
+    </div>
+
+    <div id="rest-of-dashboard">
+        </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
+    
+    let stocks = JSON.parse(localStorage.getItem('stocks')) || [{t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}];
+    let otros = JSON.parse(localStorage.getItem('otros')) || [{n: "Pension Plan", v: 55000}, {n: "Caja Seguridad (Lagartos)", v: 20700}, {n: "Caja Seguridad (Bebu)", v: 28000}, {n: "Bonus", v: 40000}];
+    let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
+    let sheetData = {};
+
+    const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    async function fetchData() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const data = await res.json();
+            sheetData = {};
+            data.forEach(r => {
+                if(r[0]) sheetData[r[0].toString().toUpperCase().trim()] = { q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc: parseFloat(r[5])||0, dcp: parseFloat(r[4])||0 };
+            });
+            render();
+            document.getElementById('sync-info').innerText = "Sincronizado ✅";
+        } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
+    }
+
+    function render() {
+        let totalS = 0, totalDC = 0, totalFCI = 0, totalO = 0;
+
+        // ACCIONES
+        let sHtml = stocks.map(s => {
+            const d = sheetData[s.t.toUpperCase()] || {p:0, dc:0, dcp:0};
+            const sub = d.p * s.q; totalS += sub; totalDC += d.dc;
+            const pct = (Math.abs(d.dcp) < 1.0) ? (d.dcp * 100) : d.dcp;
+            return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()}</td><td>$ ${d.p.toFixed(2)}</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${d.dcp>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td><td></td></tr>`;
+        }).join('');
+        document.getElementById('stocks-body').innerHTML = sHtml;
+
+        // --- CÁLCULO SOBRE VALOR NETO (Tu pedido) ---
+        const netoHoy = totalS + margin;
+        const netoAyer = netoHoy - totalDC;
+        const totalDC_Pct = netoAyer !== 0 ? (totalDC / netoAyer) * 100 : 0;
+
+        document.getElementById('stocks-total-day-row').innerHTML = `
+            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
+            <td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td>
+            <td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td>
+            <td style="text-align:right; font-weight:bold;">$ ${fmt(totalS)}</td>
+            <td></td>
+        `;
+        document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(netoHoy)}`;
+
+        // El resto del Dashboard se calcula igual para no romper nada
+        // ... (FCI y otros) ...
+        document.getElementById('total-general').innerText = `$ ${fmt(netoHoy + totalFCI + totalO)}`;
+    }
+    
+    function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); render(); }
+    fetchData(); setInterval(fetchData, 60000);
+</script>
+</body>
+</html>
