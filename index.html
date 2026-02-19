@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v11.1</title>
+    <title>Dashboard Martín v11.2</title>
     <style>
         :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; --martin-color: #e67e22; --jorge-color: #95a5a6; --otros-color: #34495e; --card-pad: 20px; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -31,7 +31,7 @@
     <div class="header">
         <small>Patrimonio Consolidado Martín</small>
         <h1 id="total-general">$ 0,00</h1>
-        <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
+        <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando con Google Sheets...</div>
     </div>
 
     <div class="card" style="border-top-color: var(--accent);">
@@ -63,6 +63,9 @@
                     <tr><th onclick="setFciSort('n')">Fondo ↕</th><th>Cant</th><th>NAV (/1000)</th><th>Día $</th><th>Día %</th><th style="text-align: right;">Subtotal</th></tr>
                 </thead>
                 <tbody id="fci-body"></tbody>
+                <tfoot>
+                    <tr id="fci-total-day-row" style="background: #f8f9fa; font-weight: bold; border-top: 2px solid #eee;"></tr>
+                </tfoot>
             </table>
         </div>
         <div class="section-total" id="sub-fci">Total FCI: $ 0,00</div>
@@ -132,12 +135,12 @@
         document.getElementById('stocks-total-day-row').innerHTML = `<td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td><td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(totalS)}</td><td></td>`;
         document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(netoHoy)}`;
 
-        // FCI (Aplicando división /1000 a Day Change $)
+        // FCI
         const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)) && !martinFunds.some(m => (m.c||m.n).toUpperCase().includes(k)) && !jorgeFunds.some(j => j.n.toUpperCase() === k));
         let fciObj = fciKeys.map(k => { 
             const d = sheetData[k]; 
             const pS = d.p / 1000;
-            const dcS = d.dc / 1000; // FIX: Variación diaria dividida por 1000
+            const dcS = d.dc / 1000;
             const pct = (Math.abs(d.dcp) < 1.0) ? (d.dcp * 100) : d.dcp;
             return { n: k, q: d.q, p: pS, sub: pS * d.q, dc: dcS, dcp: pct }; 
         });
@@ -152,16 +155,26 @@
                 sSub += f.sub; sDC += f.dc;
                 return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td class="${f.dc>=0?'pos':'neg'}">$ ${fmt(f.dc)}</td><td class="${f.dcp>=0?'pos':'neg'}">${f.dcp.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`;
             }).join('');
-            
             const sPct = (sSub - sDC) !== 0 ? (sDC / (sSub - sDC)) * 100 : 0;
             html += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${sDC>=0?'pos':'neg'}">$ ${fmt(sDC)}</td><td class="${sDC>=0?'pos':'neg'}">${sPct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sSub)}</td></tr>`;
-            return { html, sub: sSub };
+            return { html, sub: sSub, dcSum: sDC };
         }
 
         const r1 = renderFciGroup(g1, "OTROS FCI");
         const r2 = renderFciGroup(g2, "GALICIA");
         document.getElementById('fci-body').innerHTML = r1.html + (g2.length > 0 ? r2.html : '');
+        
         totalFCI = r1.sub + r2.sub;
+        let globalFciDC = r1.dcSum + r2.dcSum;
+        const fciNetoAyer = totalFCI - globalFciDC;
+        const globalFciPct = fciNetoAyer !== 0 ? (globalFciDC / fciNetoAyer) * 100 : 0;
+
+        document.getElementById('fci-total-day-row').innerHTML = `
+            <td colspan="3" style="text-align:right;">TOTAL DÍA FCI:</td>
+            <td class="${globalFciDC>=0?'pos':'neg'}">$ ${fmt(globalFciDC)}</td>
+            <td class="${globalFciDC>=0?'pos':'neg'}">${globalFciPct.toFixed(2)}%</td>
+            <td style="text-align:right; font-weight:bold;">$ ${fmt(totalFCI)}</td>
+        `;
         document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
 
         // RESTO (INT Y OTROS)
