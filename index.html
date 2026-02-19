@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Martín v4.6</title>
+    <title>Dashboard Martín v5.0</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
         .container { max-width: 1300px; margin: auto; }
@@ -31,10 +31,10 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">Versión v4.6 (Stable)</span>
+        <span class="version-tag">Versión v5.0 (Multitab)</span>
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
-        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Iniciando sincronización...</span>
+        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</span>
     </div>
 
     <div class="card">
@@ -52,14 +52,14 @@
                     <th onclick="setSort('p')">Precio ↕</th>
                     <th onclick="setSort('dc')">Day Chg $ ↕</th>
                     <th onclick="setSort('dcp')">Day Chg % ↕</th>
-                    <th onclick="setSort('tot')" style="text-align: right;">Subtotal ↕</th>
+                    <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody id="stocks-body"></tbody>
             <tfoot>
                 <tr style="color: #e74c3c; font-weight: bold;">
-                    <td colspan="5" style="text-align: right;">MARGEN (DEUDA):</td>
+                    <td colspan="5" style="text-align: right;">MARGEN (DEUDA EDITABLE):</td>
                     <td style="text-align: right;">
                         <input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 120px; text-align: right; font-weight: bold; border: 1px solid #ddd;">
                     </td>
@@ -71,9 +71,16 @@
     </div>
 
     <div class="card fci-card">
-        <h2>🇦🇷 Fondos Comunes (FCI)</h2>
-        <table id="fci-table">
-            <thead><tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr></thead>
+        <h2>🇦🇷 Fondos Comunes (Pestaña FCI)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fondo</th>
+                    <th>Cantidad</th>
+                    <th>NAV (Precio)</th>
+                    <th style="text-align: right;">Subtotal</th>
+                </tr>
+            </thead>
             <tbody id="fci-body"></tbody>
         </table>
         <div class="section-total" id="sub-fci">Subtotal FCI: $ 0,00</div>
@@ -82,15 +89,15 @@
     <div class="card martin-card">
         <h2>🏦 Mutual Funds - Martín</h2>
         <table>
-            <thead><tr><th>Fondo</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
+            <thead><tr><th>Fondo / CUSIP</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="martin-body"></tbody>
         </table>
-        <div class="section-total" id="sub-martin">Subtotal Martín: $ 0,00</div>
+        <div class="section-total" id="sub-martin">Subtotal Internacional: $ 0,00</div>
     </div>
 
     <div class="card jorge-card">
         <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
-        <table>
+        <table id="jorge-table">
             <thead><tr><th>Fondo</th><th>Cant.</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="jorge-body"></tbody>
         </table>
@@ -101,7 +108,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     
-    // Lista base de tickers y cantidades
+    // Data de Acciones (Cantidad se maneja desde la App/LocalStorage como en la 4.6)
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
         {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}, {t:'LMND',q:300}, {t:'AFRM',q:375},
         {t:'BLNK',q:800}, {t:'DNA',q:100}, {t:'LPSN',q:6}, {t:'NAK',q:1000}, {t:'OPEN',q:100}, {t:'SATL',q:500},
@@ -112,12 +119,7 @@
         {t:'TSLA',q:60}, {t:'AMD',q:125}, {t:'KO',q:397.333}, {t:'NVDA',q:250.092}
     ];
 
-    const fciData = [
-        {n:"BAL.AHUSD.A", q:15229.046}, {n:"C.MIII.A", q:33099.893}, {n:"COM.BEST.IDEASA", q:36855.941},
-        {n:"IAM.RENDOL.A", q:15464.026}, {n:"MAF.MIXII.D", q:8778.378}, {n:"SCH.RT.A", q:18693.75},
-        {n:"FIMA RENTA B", q:92357.32}, {n:"FIMA RENTA A", q:1803.79}
-    ];
-
+    // Mutual Funds (Listas estáticas)
     const martinFunds = [
         {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", c:"G5648E661", q:2582.186},
         {n:"Janus Henderson", q:1727.545}, {n:"Pimco Global", q:808.112}, {n:"Thornburg", q:1157.025},
@@ -130,7 +132,7 @@
         {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}
     ];
 
-    let sheetPrices = {};
+    let sheetData = {};
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
     let sortKey = 'tot', sortAsc = false;
 
@@ -141,18 +143,20 @@
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
             
-            sheetPrices = {};
-            data.slice(1).forEach(r => {
+            sheetData = {};
+            // El script ahora lee la pestaña unificada "DATA"
+            data.forEach(r => {
                 if(r[0]) {
-                    const tk = r[0].toString().toUpperCase().trim();
-                    sheetPrices[tk] = { 
-                        p: parseFloat(r[2]) || 0, 
-                        dc: parseFloat(r[5]) || 0, // Columna F (Change $ x Q)
-                        dcp: parseFloat(r[4]) || 0  // Columna E (Change %)
+                    const name = r[0].toString().toUpperCase().trim();
+                    sheetData[name] = { 
+                        q: parseFloat(r[1]) || 0, // Cantidad (usada para FCI)
+                        p: parseFloat(r[2]) || 0, // Precio
+                        dc: parseFloat(r[5]) || 0, // Day Change $ Total (Columna F)
+                        dcp: parseFloat(r[4]) || 0  // Day Change % (Columna E)
                     };
                 }
             });
-            document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString();
+            document.getElementById('sync-info').innerText = "Sincronizado ✅ v5.0";
             render();
         } catch (e) {
             document.getElementById('sync-info').innerText = "Error de sincronización ❌";
@@ -166,7 +170,6 @@
             tk = document.getElementById('new-tk').value.toUpperCase().trim();
             q = parseFloat(document.getElementById('new-qty').value) || 0;
             if (!tk) return;
-            // Forzar BATS para ETFs si no tiene mercado especificado
             if (!tk.includes(":")) tk = "BATS:" + tk;
             stocks.push({t:tk, q:q});
         } else if (action === 'edit') {
@@ -181,7 +184,7 @@
         localStorage.setItem('stocks', JSON.stringify(stocks));
         render();
 
-        document.getElementById('sync-info').innerText = "Informando al Sheets...";
+        // Informar al Sheets (Pestaña Stocks)
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -192,12 +195,12 @@
             document.getElementById('new-tk').value = "";
             document.getElementById('new-qty').value = "";
         }
-        setTimeout(fetchData, 2000);
+        setTimeout(fetchData, 1500);
     }
 
     function setSort(key) {
-        sortAsc = (sortKey === key) ? !sortAsc : false;
-        sortKey = key;
+        if (sortKey === key) sortAsc = !sortAsc;
+        else { sortKey = key; sortAsc = false; }
         render();
     }
 
@@ -210,54 +213,50 @@
     function render() {
         let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0;
         
-        // ACCIONES
+        // --- RENDER ACCIONES (Lógica 4.6) ---
         let stockList = stocks.map(s => {
-            // Buscamos el precio con o sin el prefijo para evitar que quede en cero
-            const cleanT = s.t.includes(":") ? s.t.split(":")[1] : s.t;
-            const d = sheetPrices[s.t] || sheetPrices[cleanT] || sheetPrices["BATS:" + s.t] || {p:0, dc:0, dcp:0};
+            const d = sheetData[s.t.toUpperCase()] || {p:0, dc:0, dcp:0};
             return { ...s, p: d.p, dc: d.dc, dcp: d.dcp, tot: d.p * s.q };
         });
-        
         stockList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
 
         document.getElementById('stocks-body').innerHTML = stockList.map(s => {
             totalS += s.tot;
-            // Corregimos porcentaje: si es 0.0155, mostrar 1.55%
             const pct = (s.dcp < 1 && s.dcp > -1) ? (s.dcp * 100) : s.dcp;
-            
-            return `<tr>
-                <td><b>${s.t}</b></td>
-                <td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit', '${s.t}')">✏️</button></td>
-                <td>$ ${s.p.toFixed(2)}</td>
-                <td class="${s.dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(s.dc)}</td>
-                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${pct.toFixed(2)}%</td>
-                <td class="subtotal">$ ${fmt(s.tot)}</td>
-                <td><button class="btn-del" onclick="manageStock('delete', '${s.t}')">×</button></td>
-            </tr>`;
+            return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit', '${s.t}')">✏️</button></td>
+                <td>$ ${s.p.toFixed(2)}</td><td class="${s.dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(s.dc)}</td>
+                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${pct.toFixed(2)}%</td><td class="subtotal">$ ${fmt(s.tot)}</td>
+                <td><button class="btn-del" onclick="manageStock('delete', '${s.t}')">×</button></td></tr>`;
         }).join('');
-        
         document.getElementById('sub-stocks').innerText = `Total Acciones (Neto): $ ${fmt(totalS + margin)}`;
 
-        // FCI
-        document.getElementById('fci-body').innerHTML = fciData.map(f => {
-            const p = sheetPrices[f.n.toUpperCase()]?.p || 0;
-            const sub = p * f.q; totalFCI += sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(4)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
+        // --- RENDER FCI (Dinámico v5.0) ---
+        // Los FCI son los que están en sheetData pero NO en stocks ni en fondos fijos
+        const stockKeys = stocks.map(s => s.t.toUpperCase());
+        const fixedKeys = [...martinFunds, ...jorgeFunds].map(f => (f.c || f.n).toUpperCase());
+        
+        const fciRows = Object.keys(sheetData).filter(key => !stockKeys.includes(key) && !fixedKeys.includes(key));
+        
+        document.getElementById('fci-body').innerHTML = fciRows.map(key => {
+            const d = sheetData[key];
+            const sub = d.p * d.q;
+            totalFCI += sub;
+            return `<tr><td>${key}</td><td>${d.q.toLocaleString()}</td><td>$ ${d.p.toFixed(4)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
 
-        // MARTÍN
+        // --- RENDER MARTÍN ---
         document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
             const key = (f.c || f.n).toUpperCase();
-            const p = sheetPrices[key]?.p || 0;
+            const p = sheetData[key]?.p || 0;
             const sub = p * f.q; totalM += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-martin').innerText = `Subtotal Martín: $ ${fmt(totalM)}`;
 
-        // JORGE
-        document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
-            const p = sheetPrices[f.n.toUpperCase()]?.p || 0;
+        // --- RENDER JORGE ---
+        document.getElementById('jorge-body').innerHTML = jorgeInt.map(f => {
+            const p = sheetData[f.n.toUpperCase()]?.p || 0;
             const sub = p * f.q; totalJ += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
         }).join('');
@@ -269,7 +268,7 @@
 
     document.getElementById('margin-input').value = margin;
     fetchData();
-    setInterval(fetchData, 60000); // Auto-sync cada 1 minuto
+    setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
