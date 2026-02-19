@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v18.0</title>
+    <title>Dashboard Martín v19.0</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -11,8 +11,8 @@
         .header { background: var(--p); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; }
         .card { background: white; padding: var(--cp) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h2 { padding: 0 var(--cp) 12px var(--cp); margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0; }
-        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        h2 { padding: 0 var(--cp) 12px var(--cp); margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .table-wrap { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; cursor: pointer; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13px; white-space: nowrap; }
@@ -20,7 +20,11 @@
         .neg { color: var(--d); font-weight: bold; }
         .subtotal-row { background-color: #f8fbff; font-weight: bold; color: var(--p); }
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--cp); background: #fff; border-top: 1px solid #eee; }
-        input.margin-edit { width: 110px; border: 1px solid #ddd; padding: 4px; text-align: right; font-weight: bold; color: var(--d); border-radius: 4px; background: #fffafa; }
+        input.edit-in { border: 1px solid #eee; padding: 4px 8px; border-radius: 4px; font-family: inherit; font-size: 13px; width: 100%; box-sizing: border-box; }
+        input.val-in { text-align: right; font-weight: bold; }
+        .btn-add { background: var(--s); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-del { color: #ccc; background: none; border: none; font-size: 18px; cursor: pointer; padding: 0 10px; }
+        .btn-del:hover { color: var(--d); }
     </style>
 </head>
 <body>
@@ -31,11 +35,30 @@
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
     </div>
     <div id="cards-container"></div>
+    
+    <div class="card" style="border-top-color: var(--o)">
+        <h2>💼 Otros Activos <button class="btn-add" onclick="addOtros()">+ AGREGAR</button></h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th style="width: 70%">Concepto</th><th style="text-align: right;">Monto (USD)</th><th style="width: 50px"></th></tr>
+                </thead>
+                <tbody id="otros-body"></tbody>
+            </table>
+        </div>
+        <div class="section-total" id="sub-otros">Subtotal Otros: $ 0,00</div>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
+    let otros = JSON.parse(localStorage.getItem('otros')) || [
+        {n: "Pension Plan", v: 55000},
+        {n: "Caja Seguridad (Lagartos)", v: 20700},
+        {n: "Caja Seguridad (Bebu)", v: 28000},
+        {n: "Bonus", v: 40000}
+    ];
     let sortConfig = { key: 'sub', asc: false };
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
@@ -43,30 +66,62 @@
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
-            render(data);
+            renderSheets(data);
+            renderOtros();
             document.getElementById('sync-info').innerText = "Sincronizado ✅";
         } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
     }
 
-    function setSort(key) {
-        sortConfig.asc = (sortConfig.key === key) ? !sortConfig.asc : false;
-        sortConfig.key = key;
-        fetchData();
+    // --- LÓGICA DE OTROS ---
+    function renderOtros() {
+        let sub = 0;
+        const html = otros.map((item, i) => {
+            sub += item.v;
+            return `<tr>
+                <td><input type="text" class="edit-in" value="${item.n}" onchange="updateOtros(${i}, 'n', this.value)"></td>
+                <td><input type="number" class="edit-in val-in" value="${item.v}" onchange="updateOtros(${i}, 'v', this.value)"></td>
+                <td><button class="btn-del" onclick="deleteOtros(${i})">×</button></td>
+            </tr>`;
+        }).join('');
+        document.getElementById('otros-body').innerHTML = html;
+        document.getElementById('sub-otros').innerText = `Subtotal Otros: $ ${fmt(sub)}`;
+        updateGlobalTotal();
     }
 
-    function render(data) {
-        let globalTotal = 0;
-        let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[], OTROS:[] };
+    function addOtros() {
+        otros.push({n: "Nuevo Concepto", v: 0});
+        saveOtros();
+    }
+
+    function updateOtros(index, field, value) {
+        otros[index][field] = field === 'v' ? parseFloat(value) || 0 : value;
+        saveOtros();
+    }
+
+    function deleteOtros(index) {
+        if(confirm('¿Borrar este concepto?')) {
+            otros.splice(index, 1);
+            saveOtros();
+        }
+    }
+
+    function saveOtros() {
+        localStorage.setItem('otros', JSON.stringify(otros));
+        renderOtros();
+    }
+
+    // --- LÓGICA DE SHEETS ---
+    let lastSheetTotal = 0;
+    function renderSheets(data) {
+        let sheetPatrimonio = 0;
+        let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
         
         data.forEach(r => {
-            const cat = (r[6] || "OTROS").toString().toUpperCase().trim();
+            const cat = (r[6] || "").toString().toUpperCase().trim();
             if (!cats[cat]) return;
-            const q = parseFloat(r[1]) || 0; 
-            const p = parseFloat(r[2]) || 0;
-            const dc_v = parseFloat(r[5]) || 0; 
-            const dc_p = parseFloat(r[4]) || 0;
+            const q = parseFloat(r[1]) || 0; const p = parseFloat(r[2]) || 0;
+            const dc_v = parseFloat(r[5]) || 0; const dc_p = parseFloat(r[4]) || 0;
             const isFCI = (cat === "FCI");
-            
             cats[cat].push({ 
                 n: r[0], q, p: isFCI ? p/1000 : p, 
                 dc_v: isFCI ? dc_v / 1000 : dc_v, 
@@ -76,96 +131,74 @@
         });
 
         let containerHtml = "";
-
-        // 1. ACCIONES
-        if (cats.STOCKS.length > 0) {
-            cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let sub = 0, dc = 0;
-            let rows = cats.STOCKS.map(i => {
-                sub += i.sub; dc += i.dc_v;
-                return `<tr><td><b>${i.n}</b></td><td>${i.q}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`;
-            }).join('');
-            const netSub = sub + margin;
-            const netPct = (netSub - dc) !== 0 ? (dc / (netSub - dc)) * 100 : 0;
-            globalTotal += netSub;
-            containerHtml += createCard("📈 Acciones", "var(--a)", rows, dc, netPct, sub, true, netSub);
-        }
-
-        // 2. FCI (Division Galicia / Otros con Sort funcionando)
-        if (cats.FCI.length > 0) {
-            cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
-            let g2 = cats.FCI.filter(f => f.n.toUpperCase().includes("GALICIA"));
-            let totalSub = 0, totalDc = 0;
+        
+        // Renderizado de Acciones, FCI, Martin, Jorge (Igual que v18.0)
+        const order = ["STOCKS", "FCI", "MARTIN", "JORGE"];
+        order.forEach(key => {
+            if (cats[key].length === 0) return;
+            let d = cats[key];
+            d.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             
-            const renderGroup = (list, label) => {
-                let sSub = 0, sDc = 0;
-                let h = list.map(i => { sSub += i.sub; sDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(6)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-                totalSub += sSub; totalDc += sDc;
-                const sPct = (sSub - sDc) !== 0 ? (sDc / (sSub - sDc)) * 100 : 0;
-                return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)}</td><td class="${sDc>=0?'pos':'neg'}">${sPct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sSub)}</td></tr>`;
-            };
+            let sSub = 0, sDc = 0;
+            let rowsHtml = "";
             
-            let rows = renderGroup(g1, "OTROS FCI") + (g2.length > 0 ? renderGroup(g2, "GALICIA") : "");
-            globalTotal += totalSub;
-            const totalPct = (totalSub - totalDc) !== 0 ? (totalDc / (totalSub - totalDc)) * 100 : 0;
-            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rows, totalDc, totalPct, totalSub);
-        }
+            if (key === "FCI") {
+                const g1 = d.filter(f => !f.n.toUpperCase().includes("GALICIA"));
+                const g2 = d.filter(f => f.n.toUpperCase().includes("GALICIA"));
+                const process = (list, label) => {
+                    let lsSub = 0, lsDc = 0;
+                    let h = list.map(i => { lsSub += i.sub; lsDc += i.dc_v; return row(i, key); }).join('');
+                    sSub += lsSub; sDc += lsDc;
+                    return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lsDc>=0?'pos':'neg'}">$ ${fmt(lsDc)}</td><td class="${lsDc>=0?'pos':'neg'}">${((lsSub-lsDc)!==0?lsDc/(lsSub-lsDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lsSub)}</td></tr>`;
+                };
+                rowsHtml = process(g1, "OTROS FCI") + (g2.length > 0 ? process(g2, "GALICIA") : "");
+            } else {
+                rowsHtml = d.map(i => { sSub += i.sub; sDc += i.dc_v; return row(i, key); }).join('');
+            }
 
-        // 3. MARTIN
-        if (cats.MARTIN.length > 0) {
-            cats.MARTIN.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let sub = 0, dc = 0;
-            let rows = cats.MARTIN.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            globalTotal += sub;
-            const pct = (sub - dc) !== 0 ? (dc / (sub - dc)) * 100 : 0;
-            containerHtml += createCard("🏦 Mutual Funds - Martín", "var(--m)", rows, dc, pct, sub);
-        }
+            const netS = key === "STOCKS" ? sSub + margin : sSub;
+            const netD = sDc;
+            const netPct = (netS - netD) !== 0 ? (netD / (netS - netD)) * 100 : 0;
+            if (key !== "JORGE") sheetPatrimonio += netS;
 
-        // 4. JORGE (Informativo)
-        if (cats.JORGE.length > 0) {
-            cats.JORGE.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let sub = 0, dc = 0;
-            let rows = cats.JORGE.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            const pct = (sub - dc) !== 0 ? (dc / (sub - dc)) * 100 : 0;
-            containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rows, dc, pct, sub);
-        }
-
-        // 5. OTROS (Pension, Bonus, etc)
-        if (cats.OTROS.length > 0) {
-            let sub = 0;
-            let rows = cats.OTROS.map(i => { sub += i.sub; return `<tr><td colspan="5">${i.n}</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            globalTotal += sub;
-            containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos</h2><div class="table-wrap"><table><thead><tr><th colspan="5">Concepto</th><th style="text-align:right;">Monto</th></tr></thead><tbody>${rows}</tbody></table></div><div class="section-total">Subtotal Otros: $ ${fmt(sub)}</div></div>`;
-        }
+            containerHtml += createCard(key, rowsHtml, sDc, netPct, sSub, netS);
+        });
 
         document.getElementById('cards-container').innerHTML = containerHtml;
-        document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
+        lastSheetTotal = sheetPatrimonio;
+        updateGlobalTotal();
     }
 
-    function createCard(label, color, rows, dc, pct, total, isStocks=false, netSub=0) {
-        return `<div class="card" style="border-top-color: ${color}">
-            <h2>${label}</h2>
+    function row(i, cat) {
+        return `<tr><td><b>${i.n}</b></td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(cat==="FCI"?6:2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`;
+    }
+
+    function createCard(key, rows, dc, pct, total, netS) {
+        const config = { STOCKS: ["📈 Acciones", "var(--a)"], FCI: ["🇦🇷 Fondos Argentina", "var(--s)"], MARTIN: ["🏦 Mutual Funds - Martín", "var(--m)"], JORGE: ["🏦 Mutual Funds - Jorge (Info)", "var(--j)"] }[key];
+        return `<div class="card" style="border-top-color: ${config[1]}">
+            <h2>${config[0]}</h2>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th onclick="setSort('n')">Activo ↕</th><th onclick="setSort('q')">Cant ↕</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align: right;" onclick="setSort('sub')">Total ↕</th></tr></thead>
                     <tbody>${rows}</tbody>
                     <tfoot>
-                        <tr style="background:#f8f9fa; font-weight:bold;">
-                            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
-                            <td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td>
-                            <td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
-                            <td style="text-align:right;">$ ${fmt(total)}</td>
-                        </tr>
-                        ${isStocks ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; font-weight:bold; color:var(--d);">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="margin-edit" value="${margin}" onchange="updateMargin(this.value)"></td></tr>` : ''}
+                        <tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(total)}</td></tr>
+                        ${key === "STOCKS" ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; font-weight:bold; color:var(--d);">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="margin-edit" style="width:110px; text-align:right; font-weight:bold; color:var(--d);" value="${margin}" onchange="updateMargin(this.value)"></td></tr>` : ''}
                     </tfoot>
                 </table>
             </div>
-            <div class="section-total">${isStocks ? 'Net Acciones (inc. Margen): ' : 'Subtotal: '} $ ${fmt(isStocks ? netSub : total)}</div>
+            <div class="section-total">${key === "STOCKS" ? 'Net Acciones: ' : 'Subtotal: '} $ ${fmt(netS)}</div>
         </div>`;
     }
 
+    function updateGlobalTotal() {
+        const otrosTotal = otros.reduce((acc, curr) => acc + curr.v, 0);
+        document.getElementById('total-general').innerText = `$ ${fmt(lastSheetTotal + otrosTotal)}`;
+    }
+
     function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); fetchData(); }
+    function setSort(key) { sortConfig.asc = (sortConfig.key === key) ? !sortConfig.asc : false; sortConfig.key = key; fetchData(); }
+    
     fetchData(); setInterval(fetchData, 60000);
 </script>
 </body>
