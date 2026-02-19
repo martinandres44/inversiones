@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v17.1</title>
+    <title>Dashboard Martín v18.0</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -91,11 +91,13 @@
             containerHtml += createCard("📈 Acciones", "var(--a)", rows, dc, netPct, sub, true, netSub);
         }
 
-        // 2. FCI (Division Galicia / Otros)
+        // 2. FCI (Division Galicia / Otros con Sort funcionando)
         if (cats.FCI.length > 0) {
+            cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
             let g2 = cats.FCI.filter(f => f.n.toUpperCase().includes("GALICIA"));
             let totalSub = 0, totalDc = 0;
+            
             const renderGroup = (list, label) => {
                 let sSub = 0, sDc = 0;
                 let h = list.map(i => { sSub += i.sub; sDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(6)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
@@ -103,6 +105,7 @@
                 const sPct = (sSub - sDc) !== 0 ? (sDc / (sSub - sDc)) * 100 : 0;
                 return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)}</td><td class="${sDc>=0?'pos':'neg'}">${sPct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sSub)}</td></tr>`;
             };
+            
             let rows = renderGroup(g1, "OTROS FCI") + (g2.length > 0 ? renderGroup(g2, "GALICIA") : "");
             globalTotal += totalSub;
             const totalPct = (totalSub - totalDc) !== 0 ? (totalDc / (totalSub - totalDc)) * 100 : 0;
@@ -111,6 +114,7 @@
 
         // 3. MARTIN
         if (cats.MARTIN.length > 0) {
+            cats.MARTIN.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sub = 0, dc = 0;
             let rows = cats.MARTIN.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             globalTotal += sub;
@@ -120,13 +124,14 @@
 
         // 4. JORGE (Informativo)
         if (cats.JORGE.length > 0) {
+            cats.JORGE.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sub = 0, dc = 0;
             let rows = cats.JORGE.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             const pct = (sub - dc) !== 0 ? (dc / (sub - dc)) * 100 : 0;
             containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rows, dc, pct, sub);
         }
 
-        // 5. OTROS (Sumando al total)
+        // 5. OTROS (Pension, Bonus, etc)
         if (cats.OTROS.length > 0) {
             let sub = 0;
             let rows = cats.OTROS.map(i => { sub += i.sub; return `<tr><td colspan="5">${i.n}</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
@@ -143,7 +148,7 @@
             <h2>${label}</h2>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th onclick="setSort('n')">Activo ↕</th><th>Cant.</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align: right;" onclick="setSort('sub')">Total ↕</th></tr></thead>
+                    <thead><tr><th onclick="setSort('n')">Activo ↕</th><th onclick="setSort('q')">Cant ↕</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align: right;" onclick="setSort('sub')">Total ↕</th></tr></thead>
                     <tbody>${rows}</tbody>
                     <tfoot>
                         <tr style="background:#f8f9fa; font-weight:bold;">
@@ -156,7 +161,7 @@
                     </tfoot>
                 </table>
             </div>
-            <div class="section-total">${isStocks ? 'Net Acciones (inc. Margen): ' : 'Subtotal: '} $ ${fmt(isStocks ? netSub : total)} | Var. Día: <span class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</span></div>
+            <div class="section-total">${isStocks ? 'Net Acciones (inc. Margen): ' : 'Subtotal: '} $ ${fmt(isStocks ? netSub : total)}</div>
         </div>`;
     }
 
