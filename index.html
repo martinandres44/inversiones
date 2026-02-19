@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v6.5.5</title>
+    <title>Dashboard Martín v6.5.2</title>
     <style>
-        :root {
-            --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c;
-            --bg: #f0f2f5; --martin-color: #e67e22; --otros-color: #34495e; --card-pad: 20px;
-        }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
+        :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; --martin: #e67e22; --jorge: #95a5a6; --card-pad: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; color: #fff; }
-        .card { background: white; padding: var(--card-pad) 0 0 0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; }
+        #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; }
+        .card { background: white; padding: var(--card-pad) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; }
         h2 { padding: 0 var(--card-pad) 12px var(--card-pad); margin-top: 0; color: #2c3e50; font-size: 1.25rem; border-bottom: 1px solid #f0f0f0; }
         .table-wrap { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        table { width: 100%; border-collapse: collapse; min-width: 750px; }
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13.5px; white-space: nowrap; }
         .pos { color: var(--success); font-weight: bold; }
         .neg { color: var(--danger); font-weight: bold; }
-        .subtotal-row { background-color: #f8fbff; font-weight: bold; color: var(--primary); }
+        .subtotal-row { background-color: #f8fbff; font-weight: bold; }
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--card-pad); background: #fff; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <small>Patrimonio Consolidado Martín</small>
+        <small>PATRIMONIO CONSOLIDADO</small>
         <h1 id="total-general">$ 0,00</h1>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
     </div>
@@ -90,16 +87,13 @@
         let totalS = 0, totalDC = 0, totalFCI = 0;
         let sHtml = "";
 
-        // ACCIONES
-        const tickers = ["ARKK", "ASTS", "IREN", "PLTR", "MELI", "LMND", "AAPL", "TSLA"];
+        // Stocks Logic
+        const tickers = ["BATS:ARKK", "ASTS", "IREN", "PLTR", "MELI", "LMND", "AAPL", "TSLA"];
         tickers.forEach(t => {
-            const key = t.includes(":") ? t : (t === "ARKK" ? "BATS:ARKK" : t);
-            const d = sheetData[key.toUpperCase()] || {p:0, dcp:0, dc:0, q:0};
-            if(d.q === 0 && !key.includes("BATS")) return; 
-            const q = d.q || 0; const sub = d.p * q;
-            totalS += sub; totalDC += d.dc;
+            const d = sheetData[t] || {p:0, dcp:0, dc:0, q:0};
+            const sub = d.p * d.q; totalS += sub; totalDC += d.dc;
             const pct = (Math.abs(d.dcp) < 1.0) ? (d.dcp * 100) : d.dcp;
-            sHtml += `<tr><td><b>${key}</b></td><td>${q}</td><td>$ ${d.p.toFixed(2)}</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${d.dcp>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+            sHtml += `<tr><td><b>${t}</b></td><td>${d.q}</td><td>$ ${d.p.toFixed(2)}</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${d.dcp>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
         });
         document.getElementById('stocks-body').innerHTML = sHtml;
 
@@ -107,16 +101,15 @@
         document.getElementById('stocks-total-day').innerHTML = `<td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td><td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(totalS)}</td>`;
         document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(totalS + margin)}`;
 
-        // FCI
+        // FCI Logic (Schroder up / Galicia down)
         const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !tickers.includes(k));
         let fciObj = fciKeys.map(k => { const d = sheetData[k]; return { n: k, q: d.q, p: d.p/1000, sub: (d.p/1000)*d.q }; });
-        
         let gGalicia = fciObj.filter(f => f.n.includes("GALICIA") || f.n.includes("FIMA"));
-        let gOtros = fciObj.filter(f => !f.n.includes("GALICIA") && !f.n.includes("FIMA")); // Aquí entra Schroder
+        let gOtros = fciObj.filter(f => !f.n.includes("GALICIA") && !f.n.includes("FIMA"));
 
         let subF1 = 0, subF2 = 0;
         let htmlFCI = gOtros.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + 
-                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
+                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI (Schroder, etc)</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
         htmlFCI += gGalicia.map(f => { subF2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') +
                    `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
         
