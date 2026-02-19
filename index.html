@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard Martín v6.5.2</title>
     <style>
+        /* CSS ORIGINAL DE TU VERSIÓN 6.5 */
         :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; --card-pad: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; }
         .card { background: white; padding: var(--card-pad) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; }
-        h2 { padding: 0 var(--card-pad) 12px var(--card-pad); margin-top: 0; color: #2c3e50; font-size: 1.25rem; border-bottom: 1px solid #f0f0f0; }
+        h2 { padding: 0 var(--card-pad) 12px var(--card-pad); margin-top: 0; font-size: 1.25rem; border-bottom: 1px solid #f0f0f0; }
         .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; } /* Ancho corregido para no cortar */
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13.5px; white-space: nowrap; }
         .pos { color: var(--success); font-weight: bold; }
@@ -82,33 +83,22 @@
         let totalS = 0, totalDC = 0, totalFCI = 0;
         let sHtml = "", fHtml = "";
         
-        // 1. Clasificación estricta para evitar mezclas
-        let stocksList = [], fciList = [];
-        data.forEach(r => {
-            const tk = r[0].toString().toUpperCase();
-            if (tk.includes(":") || ["AAPL", "TSLA", "MELI", "IREN", "LMND", "ASTS", "PLTR", "ARKK"].some(s => tk.includes(s))) {
-                stocksList.push(r);
-            } else {
-                fciList.push(r);
-            }
-        });
+        let stocksList = data.filter(r => r[0].includes(":") || ["AAPL", "TSLA", "MELI", "IREN", "LMND", "ASTS", "PLTR", "ARKK"].some(s => r[0].toUpperCase().includes(s)));
+        let fciList = data.filter(r => !stocksList.includes(r));
 
-        // 📈 RENDER STOCKS
         stocksList.forEach(r => {
-            const tk = r[0]; const q = parseFloat(r[1]) || 0; const p = parseFloat(r[2]) || 0;
-            const dcp = (Math.abs(r[4]) < 1.0) ? (r[4] * 100) : r[4];
-            const dc = parseFloat(r[5]) || 0; const sub = p * q;
-            totalS += sub; totalDC += dc;
-            sHtml += `<tr><td><b>${tk}</b></td><td>${q}</td><td>$ ${p.toFixed(2)}</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dcp>=0?'pos':'neg'}">${dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+            const q = parseFloat(r[1]) || 0; const p = parseFloat(r[2]) || 0;
+            const sub = p * q; totalS += sub; totalDC += (parseFloat(r[5]) || 0);
+            const dcp = Math.abs(r[4]) < 1.0 ? (r[4] * 100) : r[4]; // Fix Porcentajes
+            sHtml += `<tr><td><b>${r[0]}</b></td><td>${q}</td><td>$ ${p.toFixed(2)}</td><td class="${r[5]>=0?'pos':'neg'}">$ ${fmt(r[5])}</td><td class="${r[4]>=0?'pos':'neg'}">${dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
         });
         document.getElementById('stocks-body').innerHTML = sHtml;
 
         const totalDC_Pct = totalS > 0 ? (totalDC / (totalS - totalDC)) * 100 : 0;
         document.getElementById('stocks-total-day').innerHTML = `<td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td><td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(totalS)}</td>`;
 
-        // 🇦🇷 RENDER FCI (Schroder Arriba / Galicia Abajo)
         let gGalicia = fciList.filter(r => r[0].toUpperCase().includes("GALICIA") || r[0].toUpperCase().includes("FIMA"));
-        let gOtros = fciList.filter(r => !r[0].toUpperCase().includes("GALICIA") && !r[0].toUpperCase().includes("FIMA"));
+        let gOtros = fciList.filter(r => !gGalicia.includes(r));
 
         let subF1 = 0, subF2 = 0;
         fHtml = gOtros.map(r => {
