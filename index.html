@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Patrimonio v26.0</title>
+    <title>Dashboard Patrimonio v27.0</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -53,6 +53,7 @@
         try {
             const res = await fetch(SCRIPT_URL);
             db = await res.json();
+            // Pre-fill Otros si la DB está vacía
             if (db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
@@ -76,16 +77,13 @@
     }
 
     function addRow(type) {
-        if(type === 'OTROS') db.otros.push(["Nuevo Concepto", 0]);
+        if(type === 'OTROS') db.otros.push(["Nuevo", 0]);
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
 
     function delRow(type, i) { 
-        if(confirm('¿Eliminar esta línea?')) { 
-            db[type.toLowerCase()].splice(i, 1); 
-            render(); 
-        } 
+        if(confirm('¿Eliminar?')) { db[type.toLowerCase()].splice(i, 1); render(); } 
     }
 
     function render() {
@@ -101,18 +99,18 @@
             cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v: isFCI ? dc_v/1000 : dc_v, dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, sub: isFCI?(p*q)/1000:(p*q), isManual: false });
         });
 
-        // 2. Clasificar Acciones Manuales
+        // 2. Agregar Acciones Manuales
         db.extra.forEach((r, idx) => {
             cats.STOCKS.push({ n: r[0], q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc_v: parseFloat(r[3])||0, dc_p: parseFloat(r[4])||0, sub: (r[1]*r[2]), isManual: true, idx: idx });
         });
 
         let containerHtml = "";
 
-        // --- SECCIÓN ACCIONES (Edición Total corregida) ---
+        // --- ACCIONES (EDITABLE TOTAL) ---
         if (cats.STOCKS.length > 0) {
             cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sSub = 0, sDc = 0;
-            let rows = cats.STOCKS.map(i => {
+            let rowsHtml = cats.STOCKS.map(i => {
                 sSub += i.sub; sDc += i.dc_v;
                 const isEd = i.isManual && editModes.STOCKS;
                 return `<tr>
@@ -126,10 +124,10 @@
             }).join('');
             const net = sSub + margin;
             globalTotal += net; globalDC += sDc;
-            containerHtml += createCard("📈 Acciones", "var(--a)", rows, sDc, sSub, net, true, "STOCKS");
+            containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true, "STOCKS");
         }
 
-        // --- SECCIÓN FCI (Limpio y en orden) ---
+        // --- FCI (Limpio) ---
         if (cats.FCI.length > 0) {
             cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
@@ -141,29 +139,29 @@
                 tSub += lSub; tDc += lDc;
                 return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lDc>=0?'pos':'neg'}">$ ${fmt(lDc)}</td><td class="${lDc>=0?'pos':'neg'}">${(lSub-lDc!==0?lDc/(lSub-lDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lSub)}</td></tr>`;
             };
-            let rowsHtml = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
+            let rowsFci = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
             globalTotal += tSub; globalDC += tDc;
-            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsHtml, tDc, tSub, tSub);
+            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub);
         }
 
-        // --- SECCIÓN MARTIN ---
+        // --- MARTIN ---
         if (cats.MARTIN.length > 0) {
             let mSub = 0, mDc = 0;
-            let rows = cats.MARTIN.map(i => { mSub += i.sub; mDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            let rowsM = cats.MARTIN.map(i => { mSub += i.sub; mDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             globalTotal += mSub; globalDC += mDc;
-            containerHtml += createCard("🏦 Mutual Funds - Martín", "var(--m)", rows, mDc, mSub, mSub);
+            containerHtml += createCard("🏦 Mutual Funds - Martín", "var(--m)", rowsM, mDc, mSub, mSub);
         }
 
-        // --- SECCIÓN JORGE ---
+        // --- JORGE ---
         if (cats.JORGE.length > 0) {
             let jSub = 0, jDc = 0;
-            let rows = cats.JORGE.map(i => { jSub += i.sub; jDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rows, jDc, jSub, jSub);
+            let rowsJ = cats.JORGE.map(i => { jSub += i.sub; jDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rowsJ, jDc, jSub, jSub);
         }
 
-        // --- SECCIÓN OTROS (SORT POR MONTO DESCENDENTE) ---
+        // --- OTROS (CON SORT POR VALOR) ---
         let oSub = 0;
-        db.otros.sort((a, b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0));
+        db.otros.sort((a, b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0)); // ORDENADO
         let oRows = db.otros.map((item, i) => {
             oSub += parseFloat(item[1]) || 0;
             const isEd = editModes.Otros;
