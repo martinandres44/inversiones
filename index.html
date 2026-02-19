@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Martín v5.2</title>
+    <title>Dashboard Martín v5.3</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
         .container { max-width: 1300px; margin: auto; }
         .header { background: #1a2a3a; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; position: relative; }
-        .version-tag { position: absolute; top: 10px; right: 20px; font-size: 12px; color: #2ecc71; font-weight: bold; }
+        .version-tag { position: absolute; top: 10px; right: 20px; font-size: 12px; color: #3498db; font-weight: bold; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -28,7 +28,7 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v5.2 - ArgentinaDatos Base</span>
+        <span class="version-tag">Versión v5.3 (Final Stable)</span>
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
         <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</span>
@@ -37,7 +37,7 @@
     <div class="card">
         <h2>📈 Acciones</h2>
         <div class="input-group">
-            <input type="text" id="new-tk" placeholder="Ticker (ej: NVDA)" style="flex: 2;">
+            <input type="text" id="new-tk" placeholder="Ticker (ej: SNOW)" style="flex: 2;">
             <input type="number" id="new-qty" placeholder="Cant." style="flex: 1;">
             <button onclick="manageStock('add')" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Agregar</button>
         </div>
@@ -56,10 +56,8 @@
             <tbody id="stocks-body"></tbody>
             <tfoot>
                 <tr style="color: #e74c3c; font-weight: bold;">
-                    <td colspan="5" style="text-align: right;">MARGEN (DEUDA EDITABLE):</td>
-                    <td style="text-align: right;">
-                        <input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 120px; text-align: right; border: 1px solid #ddd; font-weight: bold;">
-                    </td>
+                    <td colspan="5" style="text-align: right;">MARGEN (DEUDA):</td>
+                    <td style="text-align: right;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 120px; text-align: right; border: 1px solid #ddd;"></td>
                     <td></td>
                 </tr>
             </tfoot>
@@ -71,7 +69,7 @@
         <h2>🇦🇷 Fondos Comunes (FCI)</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo</th><th>Cantidad</th><th>NAV (VCP)</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
             <tbody id="fci-body"></tbody>
         </table>
@@ -82,7 +80,7 @@
         <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
         <table>
             <thead>
-                <tr><th>Fondo</th><th>Cant.</th><th style="text-align: right;">Subtotal</th></tr>
+                <tr><th>Fondo</th><th>Cantidad</th><th style="text-align: right;">Subtotal</th></tr>
             </thead>
             <tbody id="jorge-body"></tbody>
         </table>
@@ -91,10 +89,10 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "TU_URL_DE_APPS_SCRIPT_AQUI"; // REEMPLAZAR CON TU URL
-
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
+    
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
-        {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}, {t:'LMND',q:300}
+        {t:'BATS:ARKK',q:110}, {t:'BATS:ARKG',q:100}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}
     ];
 
     let sheetData = {};
@@ -111,9 +109,11 @@
             data.forEach(r => {
                 if(r[0]) sheetData[r[0].toString().toUpperCase().trim()] = { q:r[1], p:r[2], dc:r[5], dcp:r[4] };
             });
-            document.getElementById('sync-info').innerText = "Sincronizado con ArgentinaDatos ✅";
+            document.getElementById('sync-info').innerText = "Sincronizado ✅";
             render();
-        } catch (e) { document.getElementById('sync-info').innerText = "Error de conexión ❌"; }
+        } catch (e) {
+            document.getElementById('sync-info').innerText = "Error de sincronización ❌";
+        }
     }
 
     async function manageStock(action, ticker = null) {
@@ -146,6 +146,7 @@
         // ACCIONES
         let sList = stocks.map(s => {
             const d = sheetData[s.t.toUpperCase()] || {p:0, dc:0, dcp:0};
+            // Fix porcentaje: si es 0.0155 -> 1.55%
             const pct = (d.dcp > -1 && d.dcp < 1) ? (d.dcp * 100) : d.dcp;
             return { ...s, p: d.p, dc: d.dc, dcp: pct, tot: d.p * s.q };
         });
@@ -160,25 +161,28 @@
         }).join('');
         document.getElementById('sub-stocks').innerText = `Total Acciones (Neto): $ ${fmt(totalS + margin)}`;
 
-        // FCI (Dinámicos)
+        // FCI Y JORGE (Dinámicos)
         const stockKeys = stocks.map(s => s.t.toUpperCase());
-        const fciKeys = Object.keys(sheetData).filter(k => !stockKeys.includes(k) && !k.includes(":"));
+        const jorgeNames = ["FEDERATED HERMES", "JANUS HENDERSON", "ALLIANZ INCOME"];
+
+        const otherKeys = Object.keys(sheetData).filter(k => !stockKeys.includes(k));
         
-        document.getElementById('fci-body').innerHTML = fciKeys.map(k => {
+        let fciHtml = "", jorgeHtml = "";
+        otherKeys.forEach(k => {
             const d = sheetData[k];
             const sub = d.p * d.q;
-            totalFCI += sub;
-            return `<tr><td>${k}</td><td>${d.q.toLocaleString()}</td><td>$ ${d.p.toFixed(4)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
-        }).join('');
-        document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
+            if (jorgeNames.some(j => k.includes(j))) {
+                totalJ += sub;
+                jorgeHtml += `<tr><td>${k}</td><td>${d.q.toLocaleString()}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
+            } else {
+                totalFCI += sub;
+                fciHtml += `<tr><td>${k}</td><td>${d.q.toLocaleString()}</td><td>$ ${d.p.toFixed(4)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
+            }
+        });
 
-        // JORGE
-        const jorgeList = ["FEDERATED HERMES", "JANUS HENDERSON", "ALLIANZ INCOME"]; // Agrega los que quieras
-        document.getElementById('jorge-body').innerHTML = jorgeList.map(name => {
-            const d = sheetData[name] || {p:0, q:0};
-            const sub = d.p * d.q; totalJ += sub;
-            return `<tr><td>${name}</td><td>${d.q.toLocaleString()}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
-        }).join('');
+        document.getElementById('fci-body').innerHTML = fciHtml;
+        document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
+        document.getElementById('jorge-body').innerHTML = jorgeHtml;
         document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $ ${fmt(totalJ)}`;
 
         document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI)}`;
