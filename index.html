@@ -2,75 +2,114 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Martín v5.7</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Martín v5.8</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-        .container { max-width: 1300px; margin: auto; }
-        .header { background: #1a2a3a; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; position: relative; }
-        .version-tag { position: absolute; top: 10px; right: 20px; font-size: 12px; color: #3498db; font-weight: bold; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; color: #95a5a6; font-size: 11px; padding: 12px; text-transform: uppercase; cursor: pointer; background: #fdfdfd; }
-        th:hover { background: #f0f7ff; color: #3498db; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .pos { color: #27ae60; font-weight: bold; }
-        .neg { color: #e74c3c; font-weight: bold; }
+        :root {
+            --primary: #1a2a3a;
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f0f2f5;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); padding: 10px; color: #333; margin: 0; }
+        .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
+        
+        /* Header Adaptativo */
+        .header { background: var(--primary); color: white; padding: 20px 15px; border-radius: 15px; text-align: center; margin-bottom: 20px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .version-tag { position: absolute; top: 8px; right: 15px; font-size: 10px; color: var(--accent); font-weight: bold; }
+        .header h1 { margin: 10px 0; font-size: 1.8rem; }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
+        h2 { border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 0; color: #2c3e50; font-size: 1.3rem; }
+
+        /* Contenedor de tabla para scroll en móvil */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Min-width asegura que no se colapse */
+        th { text-align: left; color: #95a5a6; font-size: 11px; padding: 12px; text-transform: uppercase; cursor: pointer; background: #fdfdfd; white-space: nowrap; }
+        th:hover { background: #f0f7ff; color: var(--accent); }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
+        
+        .pos { color: var(--success); font-weight: bold; }
+        .neg { color: var(--danger); font-weight: bold; }
         .subtotal-row { background-color: #f8f9fa; font-weight: bold; color: #2c3e50; }
-        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; border-top: 2px solid #eee; padding-top: 10px; margin-top: 15px; }
-        .btn-edit { background: none; border: none; cursor: pointer; color: #3498db; font-size: 14px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .section-total { text-align: right; font-weight: bold; font-size: 1.1rem; border-top: 2px solid #eee; padding-top: 10px; margin-top: 15px; }
+
+        /* Inputs adaptativos */
+        .input-group { background: #ebf2f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .input-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 120px; font-size: 16px; } /* 16px evita zoom en iPhone */
+        .input-group button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; min-width: 100px; }
+
+        .btn-edit { background: none; border: none; cursor: pointer; color: var(--accent); font-size: 16px; padding: 5px; }
+        .btn-del { color: var(--danger); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 20px; padding: 5px; }
+
+        /* Margen específico */
+        #margin-input { width: 100px; text-align: right; border: 1px solid #ddd; padding: 5px; border-radius: 4px; font-weight: bold; }
+
+        /* Media Query para Celulares */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.5rem; }
+            .input-group { flex-direction: column; }
+            .input-group input, .input-group button { width: 100%; }
+            td, th { padding: 10px 8px; }
+            .version-tag { display: none; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v5.7 - Sort by Total Active</span>
+        <span class="version-tag">v5.8 - Mobile Optimized</span>
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
-        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</span>
+        <div id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</div>
     </div>
 
     <div class="card">
         <h2>📈 Acciones</h2>
-        <div class="input-group" style="background:#ebf2f7; padding:15px; border-radius:8px; margin-bottom:15px; display:flex; gap:10px;">
-            <input type="text" id="new-tk" placeholder="Ticker" style="flex:2;">
-            <input type="number" id="new-qty" placeholder="Cant." style="flex:1;">
-            <button onclick="manageStock('add')" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">+ Agregar</button>
+        <div class="input-group">
+            <input type="text" id="new-tk" placeholder="Ticker (ej: NVDA)">
+            <input type="number" id="new-qty" placeholder="Cant.">
+            <button onclick="manageStock('add')">+ Agregar</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th onclick="setSort('t')">Ticker ↕</th>
-                    <th onclick="setSort('q')">Cant. ↕</th>
-                    <th onclick="setSort('p')">Precio ↕</th>
-                    <th onclick="setSort('dc')">Day Chg $ ↕</th>
-                    <th onclick="setSort('dcp')">Day Chg % ↕</th>
-                    <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="stocks-body"></tbody>
-            <tfoot>
-                <tr style="color:#e74c3c; font-weight:bold;">
-                    <td colspan="5" style="text-align:right;">MARGEN:</td>
-                    <td style="text-align:right;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width:110px; text-align:right; border: 1px solid #ddd;"></td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="setSort('t')">Ticker ↕</th>
+                        <th onclick="setSort('q')">Cant. ↕</th>
+                        <th onclick="setSort('p')">Precio ↕</th>
+                        <th onclick="setSort('dc')">Day Chg $ ↕</th>
+                        <th onclick="setSort('dcp')">Day Chg % ↕</th>
+                        <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="stocks-body"></tbody>
+                <tfoot>
+                    <tr style="color:var(--danger); font-weight:bold;">
+                        <td colspan="5" style="text-align:right;">MARGEN DEUDA:</td>
+                        <td style="text-align:right;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
         <div class="section-total" id="sub-stocks">Net Liquidation: $ 0,00</div>
     </div>
 
-    <div class="card" style="border-left: 5px solid #2ecc71;">
+    <div class="card" style="border-left: 5px solid var(--success);">
         <h2>🇦🇷 Fondos Comunes (FCI)</h2>
-        <table>
-            <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>NAV (/1000)</th><th style="text-align: right;">Subtotal</th></tr>
-            </thead>
-            <tbody id="fci-body"></tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr><th>Fondo</th><th>Cantidad</th><th>NAV (/1000)</th><th style="text-align: right;">Subtotal</th></tr>
+                </thead>
+                <tbody id="fci-body"></tbody>
+            </table>
+        </div>
         <div class="section-total" id="sub-fci">Total Sección FCI: $ 0,00</div>
     </div>
 </div>
@@ -84,7 +123,7 @@
 
     let sheetData = {};
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
-    let sortKey = 'tot'; // Por defecto ordena por el total de mayor a menor
+    let sortKey = 'tot';
     let sortAsc = false;
 
     const fmt = (v) => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -97,7 +136,7 @@
             data.forEach(r => {
                 if(r[0]) sheetData[r[0].toString().toUpperCase().trim()] = { q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc: parseFloat(r[5])||0, dcp: parseFloat(r[4])||0 };
             });
-            document.getElementById('sync-info').innerText = "Sincronizado ✅";
+            document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             render();
         } catch (e) { document.getElementById('sync-info').innerText = "Error de sincronización ❌"; }
     }
@@ -107,11 +146,16 @@
         if (action === 'add') {
             tk = document.getElementById('new-tk').value.toUpperCase().trim();
             q = parseFloat(document.getElementById('new-qty').value) || 0;
+            if (!tk) return;
             if (!tk.includes(":")) tk = "BATS:" + tk;
             stocks.push({t:tk, q:q});
         } else if (action === 'edit') {
-            const nq = prompt("Nueva cantidad:"); if(nq === null) return;
+            const nq = prompt("Nueva cantidad para " + ticker + ":");
+            if (nq === null) return;
             q = parseFloat(nq); stocks.find(s => s.t === ticker).q = q;
+        } else if (action === 'delete') {
+            if(!confirm("¿Borrar " + ticker + "?")) return;
+            stocks = stocks.filter(s => s.t !== ticker);
         }
         localStorage.setItem('stocks', JSON.stringify(stocks));
         render();
@@ -130,33 +174,26 @@
     function render() {
         let totalS = 0, totalFCI = 0;
 
-        // --- RENDER ACCIONES CON LÓGICA DE ORDENAMIENTO ---
+        // Render Acciones
         let sList = stocks.map(s => {
             const d = sheetData[s.t.toUpperCase()] || sheetData[s.t.replace("BATS:","").toUpperCase()] || {p:0, dc:0, dcp:0};
             const pct = (d.dcp > -1 && d.dcp < 1) ? (d.dcp * 100) : d.dcp;
             return { t: s.t, q: s.q, p: d.p, dc: d.dc, dcp: pct, tot: d.p * s.q };
         });
 
-        // Ordenar lista de acciones
-        sList.sort((a, b) => {
-            let valA = a[sortKey], valB = b[sortKey];
-            if (typeof valA === 'string') { valA = valA.toUpperCase(); valB = valB.toUpperCase(); }
-            return (sortAsc ? 1 : -1) * (valA > valB ? 1 : -1);
-        });
+        sList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
 
         document.getElementById('stocks-body').innerHTML = sList.map(s => {
             totalS += s.tot;
             return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit','${s.t}')">✏️</button></td>
                 <td>$ ${s.p.toFixed(2)}</td><td class="${s.dc>=0?'pos':'neg'}">$ ${fmt(s.dc)}</td>
                 <td class="${s.dcp>=0?'pos':'neg'}">${s.dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(s.tot)}</td>
-                <td><button onclick="manageStock('delete','${s.t}')" style="color:#e74c3c; border:none; background:none; cursor:pointer; font-weight:bold;">×</button></td></tr>`;
+                <td><button onclick="manageStock('delete','${s.t}')" class="btn-del">×</button></td></tr>`;
         }).join('');
         document.getElementById('sub-stocks').innerText = `Net Liquidation: $ ${fmt(totalS + margin)}`;
 
-        // --- RENDER FCI CON SUBTOTALES FIJOS ---
+        // Render FCI
         const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)));
-        
-        // Grupo 1: Otros FCI (6 primeros)
         const group1 = fciKeys.slice(0, 6);
         let sub1 = 0;
         let htmlFCI = group1.map(k => {
@@ -166,9 +203,8 @@
             sub1 += sub;
             return `<tr><td>${k}</td><td>${d.q.toLocaleString()}</td><td>$ ${pScaled.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
-        htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI (6 primeros)</td><td style="text-align:right;">$ ${fmt(sub1)}</td></tr>`;
+        htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(sub1)}</td></tr>`;
 
-        // Grupo 2: Galicia (Fima) (siguientes 2)
         const group2 = fciKeys.slice(6, 8);
         let sub2 = 0;
         htmlFCI += group2.map(k => {
@@ -178,16 +214,12 @@
             sub2 += sub;
             return `<tr><td>${k}</td><td>${d.q.toLocaleString()}</td><td>$ ${pScaled.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
-
-        if (group2.length > 0) {
-            htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(sub2)}</td></tr>`;
-        }
+        if (group2.length > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(sub2)}</td></tr>`;
 
         document.getElementById('fci-body').innerHTML = htmlFCI;
         totalFCI = sub1 + sub2;
         document.getElementById('sub-fci').innerText = `Total Sección FCI: $ ${fmt(totalFCI)}`;
 
-        // TOTAL GENERAL
         document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI)}`;
     }
 
