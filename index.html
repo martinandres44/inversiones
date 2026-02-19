@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v6.1</title>
+    <title>Dashboard Martín v6.2</title>
     <style>
         :root {
             --primary: #1a2a3a;
@@ -11,38 +11,41 @@
             --success: #27ae60;
             --danger: #e74c3c;
             --bg: #f0f2f5;
+            --martin-color: #e67e22;
+            --jorge-color: #95a5a6;
         }
 
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 1300px; margin: auto; padding-bottom: 30px; }
+        .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         
-        .header { background: var(--primary); color: white; padding: 25px 15px; border-radius: 15px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .header { background: var(--primary); color: white; padding: 25px 15px; border-radius: 15px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); position: relative; }
         #total-general { font-size: 2.2rem; margin: 10px 0; font-weight: bold; }
+        .version-tag { position: absolute; top: 8px; right: 15px; font-size: 10px; color: var(--accent); font-weight: bold; }
         
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { border-bottom: 2px solid var(--accent); padding-bottom: 8px; margin-top: 0; color: #2c3e50; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid transparent; }
+        h2 { padding-bottom: 8px; margin-top: 0; color: #2c3e50; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
 
-        .table-wrap { width: 100%; overflow-x: auto; border-radius: 8px; }
+        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { background: #f8f9fa; color: #7f8c8d; font-size: 10px; padding: 12px; text-transform: uppercase; cursor: pointer; text-align: left; }
         th:hover { color: var(--accent); }
-        td { padding: 14px 12px; border-bottom: 1px solid #eee; font-size: 14px; white-space: nowrap; }
+        td { padding: 14px 12px; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
         
         .pos { color: var(--success); font-weight: bold; }
         .neg { color: var(--danger); font-weight: bold; }
-        .subtotal-row { background-color: #f1f7fe; font-weight: bold; color: var(--primary); border-top: 2px solid #d0e1f3; }
-        .section-total { text-align: right; font-weight: bold; font-size: 1.2rem; padding: 15px 5px; border-top: 2px solid #eee; margin-top: 10px; }
+        .subtotal-row { background-color: #f1f7fe; font-weight: bold; color: var(--primary); }
+        .section-total { text-align: right; font-weight: bold; font-size: 1.1rem; padding: 15px 5px; border-top: 2px solid #eee; margin-top: 10px; }
 
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; font-size: 16px; min-width: 120px; }
-        button.add-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        button.add-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        .btn-edit { background: #f0f7ff; border: 1px solid #d0e7ff; padding: 5px 8px; border-radius: 5px; color: var(--accent); cursor: pointer; font-size: 12px; }
-        .btn-del { color: var(--danger); background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 0 5px; }
+        .btn-edit { background: #f0f7ff; border: 1px solid #d0e7ff; padding: 5px 8px; border-radius: 5px; color: var(--accent); cursor: pointer; }
+        .btn-del { color: var(--danger); background: none; border: none; font-size: 1.3rem; cursor: pointer; }
 
         @media (max-width: 600px) {
             #total-general { font-size: 1.8rem; }
-            td { padding: 12px 8px; font-size: 13px; }
+            .input-group input { min-width: 100%; }
         }
     </style>
 </head>
@@ -50,15 +53,16 @@
 
 <div class="container">
     <div class="header">
+        <span class="version-tag">v6.2 - Multi-Fund Stable</span>
         <small>Patrimonio Consolidado Martín</small>
         <h1 id="total-general">$ 0,00</h1>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
     </div>
 
-    <div class="card">
-        <h2>📈 Acciones <span style="font-size: 10px; color: var(--accent);">v6.1</span></h2>
+    <div class="card" style="border-top-color: var(--accent);">
+        <h2>📈 Acciones</h2>
         <div class="input-group">
-            <input type="text" id="new-tk" placeholder="Ticker (ej: ARKK)">
+            <input type="text" id="new-tk" placeholder="Ticker (ej: NVDA)">
             <input type="number" id="new-qty" placeholder="Cant.">
             <button class="add-btn" onclick="manageStock('add')">AGREGAR</button>
         </div>
@@ -71,7 +75,7 @@
                         <th onclick="setSort('p')">Precio ↕</th>
                         <th onclick="setSort('dc')">Día $ ↕</th>
                         <th onclick="setSort('dcp')">Día % ↕</th>
-                        <th onclick="setSort('tot')" style="text-align: right;">Subtotal ↕</th>
+                        <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -88,7 +92,7 @@
         <div class="section-total" id="sub-stocks">Net Acciones: $ 0,00</div>
     </div>
 
-    <div class="card" style="border-left: 5px solid var(--success);">
+    <div class="card" style="border-top-color: var(--success);">
         <h2>🇦🇷 Fondos Comunes</h2>
         <div class="table-wrap">
             <table>
@@ -96,7 +100,7 @@
                     <tr>
                         <th onclick="setFciSort('n')">Fondo ↕</th>
                         <th onclick="setFciSort('q')">Cant ↕</th>
-                        <th onclick="setFciSort('p')">NAV ↕</th>
+                        <th onclick="setFciSort('p')">NAV (/1000) ↕</th>
                         <th style="text-align: right;" onclick="setFciSort('sub')">Subtotal ↕</th>
                     </tr>
                 </thead>
@@ -105,13 +109,55 @@
         </div>
         <div class="section-total" id="sub-fci">Total FCI: $ 0,00</div>
     </div>
+
+    <div class="card" style="border-top-color: var(--martin-color);">
+        <h2>🏦 Mutual Funds - Martín</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fondo / CUSIP</th><th>Cant.</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr>
+                </thead>
+                <tbody id="martin-body"></tbody>
+            </table>
+        </div>
+        <div class="section-total" id="sub-martin">Total Internacional: $ 0,00</div>
+    </div>
+
+    <div class="card" style="border-top-color: var(--jorge-color); opacity: 0.9;">
+        <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Fondo</th><th>Cant.</th><th style="text-align: right;">Subtotal</th></tr>
+                </thead>
+                <tbody id="jorge-body"></tbody>
+            </table>
+        </div>
+        <div class="section-total" id="sub-jorge">Total Jorge: $ 0,00</div>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     
-    // Forzamos el ticker correcto en la base local para evitar errores de Londres
-    let stocks = JSON.parse(localStorage.getItem('stocks')) || [{t:'BATS:ARKK',q:110}];
+    // Lista persistente de Acciones (v5.7)
+    let stocks = JSON.parse(localStorage.getItem('stocks')) || [
+        {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}, {t:'LMND',q:300}
+    ];
+
+    // Listas fijas de Fondos Internacionales
+    const martinFunds = [
+        {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545},
+        {n:"Pimco Global", q:808.112}, {n:"Thornburg", q:1157.025}, {n:"Allianz Income", q:1421.231},
+        {n:"Ab Sicav I", q:620.444}, {n:"Franklin U.S.", q:357.654}, {n:"Franklin Conv.", q:2128.218},
+        {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543}
+    ];
+
+    const jorgeFunds = [
+        {n:"Fed. Hermes", q:3819.89}, {n:"Janus Henderson", q:5034.388}, {n:"Allianz Income", q:6315.422},
+        {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}
+    ];
+
     let sheetData = {};
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
     let sortKey = 'tot', sortAsc = false;
@@ -124,30 +170,12 @@
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
             sheetData = {};
-            let stocksFromSheet = [];
-            
             data.forEach(r => {
-                if(r[0]) {
-                    const key = r[0].toString().toUpperCase().trim();
-                    sheetData[key] = { q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc: parseFloat(r[5])||0, dcp: parseFloat(r[4])||0 };
-                    // Identificamos acciones por el prefijo o formato
-                    if(key.includes(":") || key.includes("BATS") || key.includes("NYSE") || key.includes("NASDAQ")) {
-                        stocksFromSheet.push({t: key, q: parseFloat(r[1])||0});
-                    }
-                }
+                if(r[0]) sheetData[r[0].toString().toUpperCase().trim()] = { q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc: parseFloat(r[5])||0, dcp: parseFloat(r[4])||0 };
             });
-
-            if(stocksFromSheet.length > 0) {
-                stocks = stocksFromSheet;
-                localStorage.setItem('stocks', JSON.stringify(stocks));
-            }
-
-            document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString();
             render();
-        } catch (e) {
-            document.getElementById('sync-info').innerText = "Sin conexión ⚠️";
-            render();
-        }
+        } catch (e) { document.getElementById('sync-info').innerText = "Error Sinc. ❌"; }
     }
 
     async function manageStock(action, ticker = null) {
@@ -156,7 +184,6 @@
             tk = document.getElementById('new-tk').value.toUpperCase().trim();
             q = parseFloat(document.getElementById('new-qty').value) || 0;
             if (!tk) return;
-            // Blindaje contra Londres: si no tiene mercado, ponemos BATS
             if (!tk.includes(":")) tk = "BATS:" + tk;
             stocks.push({t:tk, q:q});
         } else if (action === 'edit') {
@@ -164,7 +191,7 @@
             if (nq === null) return;
             q = parseFloat(nq); stocks.find(s => s.t === ticker).q = q;
         } else if (action === 'delete') {
-            if(!confirm("¿Borrar activo?")) return;
+            if(!confirm("Borrar " + ticker + "?")) return;
             stocks = stocks.filter(s => s.t !== ticker);
         }
         localStorage.setItem('stocks', JSON.stringify(stocks));
@@ -178,9 +205,9 @@
     function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); render(); }
 
     function render() {
-        let totalS = 0, totalFCI = 0;
+        let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0;
 
-        // --- ACCIONES ---
+        // --- ACCIONES (Motor v5.7) ---
         let sList = stocks.map(s => {
             const d = sheetData[s.t.toUpperCase()] || {p:0, dc:0, dcp:0};
             const pct = (d.dcp > -1 && d.dcp < 1) ? (d.dcp * 100) : d.dcp;
@@ -195,44 +222,48 @@
                 <td class="${s.dcp>=0?'pos':'neg'}">${s.dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(s.tot)}</td>
                 <td><button onclick="manageStock('delete','${s.t}')" class="btn-del">×</button></td></tr>`;
         }).join('');
-        document.getElementById('sub-stocks').innerText = `Subtotal Acciones: $ ${fmt(totalS + margin)}`;
+        document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(totalS + margin)}`;
 
-        // --- FCI CON ORDENAMIENTO ESTANCO POR GRUPO ---
-        const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)));
+        // --- FCI (Grouped Sort v6.1) ---
+        const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)) && !martinFunds.some(m => (m.c||m.n).toUpperCase().includes(k)));
         let fciObjects = fciKeys.map(k => {
             const d = sheetData[k];
             const pScaled = d.p / 1000;
             return { n: k, q: d.q, p: pScaled, sub: pScaled * d.q };
         });
 
-        // 1. Separamos los grupos
-        let groupOthers = fciObjects.slice(0, 6);
-        let groupGalicia = fciObjects.slice(6, 8);
+        let g1 = fciObjects.slice(0, 6), g2 = fciObjects.slice(6, 8);
+        const fciSorter = (a, b) => (fciSortAsc ? 1 : -1) * (a[fciSortKey] > b[fciSortKey] ? 1 : -1);
+        g1.sort(fciSorter); g2.sort(fciSorter);
 
-        // 2. Ordenamos cada grupo independientemente
-        const sorter = (a, b) => (fciSortAsc ? 1 : -1) * (a[fciSortKey] > b[fciSortKey] ? 1 : -1);
-        groupOthers.sort(sorter);
-        groupGalicia.sort(sorter);
-
-        // 3. Calculamos subtotales y generamos HTML
         let sub1 = 0, sub2 = 0;
-        let htmlFCI = groupOthers.map(f => {
-            sub1 += f.sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`;
-        }).join('') + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(sub1)}</td></tr>`;
-
-        htmlFCI += groupGalicia.map(f => {
-            sub2 += f.sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`;
-        }).join('');
-        if(groupGalicia.length > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(sub2)}</td></tr>`;
+        let htmlFCI = g1.map(f => { sub1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + 
+                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(sub1)}</td></tr>`;
+        htmlFCI += g2.map(f => { sub2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('');
+        if(sub2 > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(sub2)}</td></tr>`;
 
         document.getElementById('fci-body').innerHTML = htmlFCI;
         totalFCI = sub1 + sub2;
-        document.getElementById('sub-fci').innerText = `Total Sección FCI: $ ${fmt(totalFCI)}`;
+        document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
 
-        // TOTAL GENERAL
-        document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI)}`;
+        // --- MUTUAL FUNDS MARTÍN ---
+        document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
+            const d = sheetData[(f.c || f.n).toUpperCase()] || {p:0};
+            const sub = d.p * f.q; totalM += sub;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${d.p.toFixed(2)}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+        }).join('');
+        document.getElementById('sub-martin').innerText = `Total Martín Int: $ ${fmt(totalM)}`;
+
+        // --- MUTUAL FUNDS JORGE ---
+        document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
+            const d = sheetData[f.n.toUpperCase()] || {p:0};
+            const sub = d.p * f.q; totalJ += sub;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+        }).join('');
+        document.getElementById('sub-jorge').innerText = `Total Jorge: $ ${fmt(totalJ)}`;
+
+        // TOTAL GENERAL CONSOLIDADO
+        document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI + totalM)}`;
     }
 
     fetchData();
