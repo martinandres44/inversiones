@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v6.3</title>
+    <title>Dashboard Martín v6.4</title>
     <style>
         :root {
             --primary: #1a2a3a;
@@ -47,7 +47,6 @@
         @media (max-width: 600px) {
             #total-general { font-size: 1.8rem; }
             .input-group input { min-width: 100%; }
-            table { min-width: 500px; }
         }
     </style>
 </head>
@@ -55,7 +54,7 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v6.3 - Final Consolidation</span>
+        <span class="version-tag">v6.4 - Final Master</span>
         <small>Patrimonio Consolidado Martín</small>
         <h1 id="total-general">$ 0,00</h1>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando datos...</div>
@@ -125,19 +124,6 @@
         <div class="section-total" id="sub-martin">Total Internacional: $ 0,00</div>
     </div>
 
-    <div class="card" style="border-top-color: var(--otros-color);">
-        <h2>💼 Otros (Cajas & Bonus)</h2>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Concepto</th><th style="text-align: right;">Monto (USD)</th></tr>
-                </thead>
-                <tbody id="otros-body"></tbody>
-            </table>
-        </div>
-        <div class="section-total" id="sub-otros">Total Otros: $ 0,00</div>
-    </div>
-
     <div class="card" style="border-top-color: var(--jorge-color); opacity: 0.9;">
         <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
         <div class="table-wrap">
@@ -150,17 +136,33 @@
         </div>
         <div class="section-total" id="sub-jorge">Total Jorge: $ 0,00</div>
     </div>
+
+    <div class="card" style="border-top-color: var(--otros-color);">
+        <h2>💼 Otros (Cajas & Bonus)</h2>
+        <div class="input-group">
+            <input type="text" id="new-otro-n" placeholder="Concepto (ej: Caja Bebu)">
+            <input type="number" id="new-otro-v" placeholder="Monto USD">
+            <button class="add-btn" onclick="addOtro()" style="background: var(--otros-color);">+ SUMAR</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Concepto</th><th style="text-align: right;">Monto (USD)</th><th></th></tr>
+                </thead>
+                <tbody id="otros-body"></tbody>
+            </table>
+        </div>
+        <div class="section-total" id="sub-otros">Total Otros: $ 0,00</div>
+    </div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     
-    // Motor v5.7 Stocks
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
-        {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}, {t:'LMND',q:300}
+        {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}
     ];
 
-    // Sección Otros Editable
     let otros = JSON.parse(localStorage.getItem('otros')) || [
         {n: "Pension Plan", v: 55000},
         {n: "Caja Seguridad (Lagartos)", v: 20700},
@@ -197,9 +199,10 @@
             });
             document.getElementById('sync-info').innerText = "Sincronizado ✅";
             render();
-        } catch (e) { document.getElementById('sync-info').innerText = "Modo Local ⚠️"; }
+        } catch (e) { document.getElementById('sync-info').innerText = "Modo Local ⚠️"; render(); }
     }
 
+    // GESTIÓN ACCIONES
     async function manageStock(action, ticker = null) {
         let tk = ticker, q = 0;
         if (action === 'add') {
@@ -208,6 +211,7 @@
             if (!tk) return;
             if (!tk.includes(":")) tk = "BATS:" + tk;
             stocks.push({t:tk, q:q});
+            document.getElementById('new-tk').value = ""; document.getElementById('new-qty').value = "";
         } else if (action === 'edit') {
             const nq = prompt("Nueva cantidad:");
             if (nq === null) return;
@@ -222,13 +226,23 @@
         setTimeout(fetchData, 1500);
     }
 
-    function editOtro(idx) {
-        const newVal = prompt("Nuevo valor para " + otros[idx].n + ":", otros[idx].v);
-        if (newVal !== null) {
-            otros[idx].v = parseFloat(newVal) || 0;
+    // GESTIÓN OTROS
+    function addOtro() {
+        const n = document.getElementById('new-otro-n').value.trim();
+        const v = parseFloat(document.getElementById('new-otro-v').value) || 0;
+        if (n) {
+            otros.push({n, v});
             localStorage.setItem('otros', JSON.stringify(otros));
+            document.getElementById('new-otro-n').value = ""; document.getElementById('new-otro-v').value = "";
             render();
         }
+    }
+    function editOtro(idx) {
+        const newVal = prompt("Nuevo monto para " + otros[idx].n + ":", otros[idx].v);
+        if (newVal !== null) { otros[idx].v = parseFloat(newVal) || 0; localStorage.setItem('otros', JSON.stringify(otros)); render(); }
+    }
+    function deleteOtro(idx) {
+        if(confirm("¿Eliminar concepto?")) { otros.splice(idx, 1); localStorage.setItem('otros', JSON.stringify(otros)); render(); }
     }
 
     function setSort(k) { sortAsc = (sortKey === k) ? !sortAsc : false; sortKey = k; render(); }
@@ -245,7 +259,6 @@
             return { t: s.t, q: s.q, p: d.p, dc: d.dc, dcp: pct, tot: d.p * s.q };
         });
         sList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
-
         document.getElementById('stocks-body').innerHTML = sList.map(s => {
             totalS += s.tot;
             return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit','${s.t}')">✏️</button></td>
@@ -257,22 +270,14 @@
 
         // FCI
         const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)) && !martinFunds.some(m => (m.c||m.n).toUpperCase().includes(k)));
-        let fciObjects = fciKeys.map(k => {
-            const d = sheetData[k];
-            const pScaled = d.p / 1000;
-            return { n: k, q: d.q, p: pScaled, sub: pScaled * d.q };
-        });
-
+        let fciObjects = fciKeys.map(k => { const d = sheetData[k]; const pScaled = d.p / 1000; return { n: k, q: d.q, p: pScaled, sub: pScaled * d.q }; });
         let g1 = fciObjects.slice(0, 6), g2 = fciObjects.slice(6, 8);
         const fciSorter = (a, b) => (fciSortAsc ? 1 : -1) * (a[fciSortKey] > b[fciSortKey] ? 1 : -1);
         g1.sort(fciSorter); g2.sort(fciSorter);
-
         let subF1 = 0, subF2 = 0;
-        let htmlFCI = g1.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + 
-                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
+        let htmlFCI = g1.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
         htmlFCI += g2.map(f => { subF2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('');
         if(subF2 > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
-
         document.getElementById('fci-body').innerHTML = htmlFCI;
         totalFCI = subF1 + subF2;
         document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
@@ -285,20 +290,20 @@
         }).join('');
         document.getElementById('sub-martin').innerText = `Total Int: $ ${fmt(totalM)}`;
 
-        // OTROS
-        document.getElementById('otros-body').innerHTML = otros.map((o, i) => {
-            totalO += o.v;
-            return `<tr><td>${o.n} <button class="btn-edit" onclick="editOtro(${i})">✏️</button></td><td style="text-align:right; font-weight:bold;">$ ${fmt(o.v)}</td></tr>`;
-        }).join('');
-        document.getElementById('sub-otros').innerText = `Total Otros: $ ${fmt(totalO)}`;
-
-        // MUTUAL FUNDS JORGE (No suma al total general)
+        // MUTUAL FUNDS JORGE
         document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
             const d = sheetData[f.n.toUpperCase()] || {p:0};
             const sub = d.p * f.q; totalJ += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-jorge').innerText = `Total Jorge: $ ${fmt(totalJ)}`;
+
+        // OTROS
+        document.getElementById('otros-body').innerHTML = otros.map((o, i) => {
+            totalO += o.v;
+            return `<tr><td>${o.n} <button class="btn-edit" onclick="editOtro(${i})">✏️</button></td><td style="text-align:right; font-weight:bold;">$ ${fmt(o.v)}</td><td><button onclick="deleteOtro(${i})" class="btn-del">×</button></td></tr>`;
+        }).join('');
+        document.getElementById('sub-otros').innerText = `Total Otros: $ ${fmt(totalO)}`;
 
         // TOTAL GENERAL CONSOLIDADO
         const granTotal = totalS + margin + totalFCI + totalM + totalO;
