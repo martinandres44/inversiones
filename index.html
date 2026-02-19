@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard Martín v6.5.2</title>
     <style>
-        :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; --martin: #e67e22; --jorge: #95a5a6; --card-pad: 20px; }
+        :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --bg: #f0f2f5; --card-pad: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         .header { background: var(--primary); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; }
         .card { background: white; padding: var(--card-pad) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; }
         h2 { padding: 0 var(--card-pad) 12px var(--card-pad); margin-top: 0; color: #2c3e50; font-size: 1.25rem; border-bottom: 1px solid #f0f0f0; }
-        .table-wrap { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 750px; }
+        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; } /* Ancho corregido para no cortar */
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13.5px; white-space: nowrap; }
         .pos { color: var(--success); font-weight: bold; }
@@ -67,56 +67,66 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     const margin = -269051;
-    let sheetData = {};
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     async function fetchData() {
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
-            sheetData = {};
-            data.forEach(r => {
-                if(r[0]) sheetData[r[0].toString().toUpperCase().trim()] = { q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dcp: parseFloat(r[4])||0, dc: parseFloat(r[5])||0 };
-            });
+            render(data);
             document.getElementById('sync-info').innerText = "Sincronizado ✅";
-            render();
-        } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
+        } catch (e) { document.getElementById('sync-info').innerText = "Error Sincro ❌"; }
     }
 
-    function render() {
+    function render(data) {
         let totalS = 0, totalDC = 0, totalFCI = 0;
-        let sHtml = "";
+        let sHtml = "", fHtml = "";
+        
+        // 1. Clasificación estricta para evitar mezclas
+        let stocksList = [], fciList = [];
+        data.forEach(r => {
+            const tk = r[0].toString().toUpperCase();
+            if (tk.includes(":") || ["AAPL", "TSLA", "MELI", "IREN", "LMND", "ASTS", "PLTR", "ARKK"].some(s => tk.includes(s))) {
+                stocksList.push(r);
+            } else {
+                fciList.push(r);
+            }
+        });
 
-        // Stocks Logic
-        const tickers = ["BATS:ARKK", "ASTS", "IREN", "PLTR", "MELI", "LMND", "AAPL", "TSLA"];
-        tickers.forEach(t => {
-            const d = sheetData[t] || {p:0, dcp:0, dc:0, q:0};
-            const sub = d.p * d.q; totalS += sub; totalDC += d.dc;
-            const pct = (Math.abs(d.dcp) < 1.0) ? (d.dcp * 100) : d.dcp;
-            sHtml += `<tr><td><b>${t}</b></td><td>${d.q}</td><td>$ ${d.p.toFixed(2)}</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${d.dcp>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+        // 📈 RENDER STOCKS
+        stocksList.forEach(r => {
+            const tk = r[0]; const q = parseFloat(r[1]) || 0; const p = parseFloat(r[2]) || 0;
+            const dcp = (Math.abs(r[4]) < 1.0) ? (r[4] * 100) : r[4];
+            const dc = parseFloat(r[5]) || 0; const sub = p * q;
+            totalS += sub; totalDC += dc;
+            sHtml += `<tr><td><b>${tk}</b></td><td>${q}</td><td>$ ${p.toFixed(2)}</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dcp>=0?'pos':'neg'}">${dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
         });
         document.getElementById('stocks-body').innerHTML = sHtml;
 
         const totalDC_Pct = totalS > 0 ? (totalDC / (totalS - totalDC)) * 100 : 0;
         document.getElementById('stocks-total-day').innerHTML = `<td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td><td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(totalS)}</td>`;
-        document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(totalS + margin)}`;
 
-        // FCI Logic (Schroder up / Galicia down)
-        const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !tickers.includes(k));
-        let fciObj = fciKeys.map(k => { const d = sheetData[k]; return { n: k, q: d.q, p: d.p/1000, sub: (d.p/1000)*d.q }; });
-        let gGalicia = fciObj.filter(f => f.n.includes("GALICIA") || f.n.includes("FIMA"));
-        let gOtros = fciObj.filter(f => !f.n.includes("GALICIA") && !f.n.includes("FIMA"));
+        // 🇦🇷 RENDER FCI (Schroder Arriba / Galicia Abajo)
+        let gGalicia = fciList.filter(r => r[0].toUpperCase().includes("GALICIA") || r[0].toUpperCase().includes("FIMA"));
+        let gOtros = fciList.filter(r => !r[0].toUpperCase().includes("GALICIA") && !r[0].toUpperCase().includes("FIMA"));
 
         let subF1 = 0, subF2 = 0;
-        let htmlFCI = gOtros.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + 
-                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI (Schroder, etc)</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
-        htmlFCI += gGalicia.map(f => { subF2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') +
-                   `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
+        fHtml = gOtros.map(r => {
+            const sub = (r[2]/1000) * r[1]; subF1 += sub;
+            return `<tr><td>${r[0]}</td><td>${r[1].toLocaleString()}</td><td>$ ${(r[2]/1000).toFixed(6)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
+        }).join('') + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI (Schroder, etc)</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
+
+        fHtml += gGalicia.map(r => {
+            const sub = (r[2]/1000) * r[1]; subF2 += sub;
+            return `<tr><td>${r[0]}</td><td>${r[1].toLocaleString()}</td><td>$ ${(r[2]/1000).toFixed(6)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
+        }).join('') + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
         
-        document.getElementById('fci-body').innerHTML = htmlFCI;
+        document.getElementById('fci-body').innerHTML = fHtml;
         totalFCI = subF1 + subF2;
-        document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
+
         document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI)}`;
+        document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(totalS + margin)}`;
+        document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
     }
     fetchData(); setInterval(fetchData, 60000);
 </script>
