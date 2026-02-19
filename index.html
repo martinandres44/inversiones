@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v13.0</title>
+    <title>Dashboard Martín v13.1</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -12,7 +12,7 @@
         #total-general { font-size: 2.5rem; margin: 10px 0; font-weight: bold; }
         .card { background: white; padding: var(--cp) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h2 { padding: 0 var(--cp) 12px var(--cp); margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0; }
-        .table-wrap { width: 100%; overflow-x: auto; }
+        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13px; white-space: nowrap; }
@@ -28,16 +28,14 @@
         <h1 id="total-general">$ 0,00</h1>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizado ✅</div>
     </div>
-
     <div id="cards-container"></div>
 </div>
 
 <script>
-    const SCRIPT_URL = "TU_URL_DE_IMPLEMENTACION_ACA";
-    const margin = -269051;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
+    const margin = -269051; // Tu margen de deuda fijo
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-    // Definición de tarjetas y sus colores
     const categories = {
         "STOCKS": { label: "📈 Acciones", color: "var(--a)" },
         "FCI": { label: "🇦🇷 Fondos Argentina", color: "var(--s)" },
@@ -50,6 +48,7 @@
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
             render(data);
+            document.getElementById('sync-info').innerText = "Sincronizado ✅";
         } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
     }
 
@@ -64,23 +63,26 @@
             const name = r[0]; // Ticker
             const q = parseFloat(r[1]) || 0; // Cantidad
             const p = parseFloat(r[2]) || 0; // Precio
-            const dc_val = parseFloat(r[5]) || 0; // Cambio Dia $ x Q
-            const dc_pct = parseFloat(r[4]) || 0; // Cambio Dia %
+            const dc_val = parseFloat(r[5]) || 0; // Cambio Dia $ x Q (Col F)
+            const dc_pct = parseFloat(r[4]) || 0; // Cambio Dia % (Col E)
             const sub = p * q;
 
             catsData[cat].sub += sub;
             catsData[cat].dc += dc_val;
 
-            // Escalamiento visual para FCI Argentina
+            // Ajuste visual para NAV de FCI (división por 1000)
             const pDisp = cat === "FCI" ? (p/1000).toFixed(6) : p.toFixed(2);
             const dcDisp = cat === "FCI" ? dc_val/1000 : dc_val;
+            
+            // Fix para porcentajes si vienen como decimal (0.0119 -> 1.19%)
+            const pctDisp = (Math.abs(dc_pct) < 1.0) ? (dc_pct * 100) : dc_pct;
 
             catsData[cat].html += `<tr>
                 <td><b>${name}</b></td>
                 <td>${q.toLocaleString()}</td>
                 <td>$ ${pDisp}</td>
                 <td class="${dcDisp>=0?'pos':'neg'}">$ ${fmt(dcDisp)}</td>
-                <td class="${dc_pct>=0?'pos':'neg'}">${(dc_pct * (dc_pct < 1 && dc_pct > -1 ? 100 : 1)).toFixed(2)}%</td>
+                <td class="${pctDisp>=0?'pos':'neg'}">${pctDisp.toFixed(2)}%</td>
                 <td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td>
             </tr>`;
         });
@@ -106,7 +108,7 @@
                     </div>
                     <div class="section-total">
                         ${key === "STOCKS" ? 'Net Acciones (inc. Margen): ' : 'Subtotal: '} 
-                        $ ${fmt(netSub)} | Día: <span class="${d.dc>=0?'pos':'neg'}">${netPct.toFixed(2)}%</span>
+                        $ ${fmt(netSub)} | Var. Día: <span class="${d.dc>=0?'pos':'neg'}">${netPct.toFixed(2)}%</span>
                     </div>
                 </div>`;
         }
