@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Patrimonio v24.2</title>
+    <title>Dashboard Patrimonio v25.0</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -21,11 +21,12 @@
         .neg { color: var(--d); font-weight: bold; }
         .subtotal-row { background-color: #f8fbff; font-weight: bold; color: var(--p); }
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--cp); background: #fff; border-top: 1px solid #eee; }
-        input.edit-in { border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 13px; width: 80%; }
+        input.edit-in { border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 13px; width: 85%; }
         .btn-tool { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; }
         .btn-tool:hover { opacity: 1; }
         .btn-save { background: var(--a); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--s); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 10px; }
+        .btn-del { color: var(--d); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -52,7 +53,6 @@
         try {
             const res = await fetch(SCRIPT_URL);
             db = await res.json();
-            // Default Otros si viene vacío
             if (db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
@@ -70,18 +70,21 @@
     }
 
     function toggleEdit(sec) { editModes[sec] = !editModes[sec]; render(); }
-    function updateVal(type, i, col, val) { db[type.toLowerCase()][i][col] = isNaN(val) ? val : parseFloat(val); }
+    function updateVal(type, i, col, val) { 
+        db[type.toLowerCase()][i][col] = isNaN(val) || val === "" ? val : parseFloat(val); 
+    }
     function addRow(type) {
         if(type === 'OTROS') db.otros.push(["Nuevo Concepto", 0]);
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
-    function delRow(type, i) { if(confirm('¿Eliminar línea?')) { db[type.toLowerCase()].splice(i, 1); render(); } }
+    function delRow(type, i) { if(confirm('¿Eliminar?')) { db[type.toLowerCase()].splice(i, 1); render(); } }
 
     function render() {
         let globalTotal = 0, globalDC = 0;
         let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
 
+        // 1. Mapeo de datos del Sheets
         db.main.forEach(r => {
             const cat = (r[6] || "").toUpperCase().trim();
             if (!cats[cat]) return;
@@ -90,13 +93,14 @@
             cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v: isFCI ? dc_v/1000 : dc_v, dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, sub: isFCI?(p*q)/1000:(p*q), isManual: false });
         });
 
+        // 2. Mapeo de Acciones Manuales (Extra)
         db.extra.forEach((r, idx) => {
             cats.STOCKS.push({ n: r[0], q: r[1], p: r[2], dc_v: r[3], dc_p: r[4], sub: r[1]*r[2], isManual: true, idx });
         });
 
         let containerHtml = "";
 
-        // --- ACCIONES (Edición corregida) ---
+        // --- ACCIONES (Edición corregida para Nombre y Cantidad) ---
         if (cats.STOCKS.length > 0) {
             cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sSub = 0, sDc = 0;
@@ -109,7 +113,7 @@
                     <td>$ ${i.p.toFixed(2)}</td>
                     <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
                     <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
-                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canEdit ? `<button onclick="delRow('EXTRA',${i.idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; margin-left:10px;">×</button>` : ''}</td>
+                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canEdit ? `<button class="btn-del" onclick="delRow('EXTRA',${i.idx})">×</button>` : ''}</td>
                 </tr>`;
             }).join('');
             const net = sSub + margin;
@@ -117,7 +121,7 @@
             containerHtml += createCard("📈 Acciones", "var(--a)", rows, sDc, sSub, net, true);
         }
 
-        // --- FCI (Limpio y en orden) ---
+        // --- FCI (Negritas solo en subtotales) ---
         if (cats.FCI.length > 0) {
             cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
@@ -149,14 +153,16 @@
             containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rows, jDc, jSub, jSub);
         }
 
-        // --- OTROS (CON SORT POR MONTO) ---
+        // --- OTROS (SORT POR MONTO Y CRUD) ---
         let oSub = 0;
-        // Ordenamos Otros por monto (columna 1) de mayor a menor
-        db.otros.sort((a, b) => b[1] - a[1]);
-        
+        db.otros.sort((a, b) => b[1] - a[1]); // Sort automático por valor descendente
         let oRows = db.otros.map((item, i) => {
             oSub += item[1];
-            return `<tr><td>${editModes.Otros ? `<input class="edit-in" value="${item[0]}" onchange="updateVal('OTROS',${i},0,this.value)">` : `<b>${item[0]}</b>`}</td><td style="text-align:right;">${editModes.Otros ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateVal('OTROS',${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td><td class="${editModes.Otros?'':'hidden'}"><button onclick="delRow('OTROS',${i})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button></td></tr>`;
+            return `<tr>
+                <td>${editModes.Otros ? `<input class="edit-in" value="${item[0]}" onchange="updateVal('OTROS',${i},0,this.value)">` : `<b>${item[0]}</b>`}</td>
+                <td style="text-align:right;">${editModes.Otros ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateVal('OTROS',${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td>
+                <td class="${editModes.Otros?'':'hidden'}"><button class="btn-del" onclick="delRow('OTROS',${i})">×</button></td>
+            </tr>`;
         }).join('');
         globalTotal += oSub;
         containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos <span>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveData('OTROS')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button></span></h2><div class="table-wrap"><table><thead><tr><th>Concepto</th><th style="text-align:right">Monto</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div><div class="section-total">Subtotal: $ ${fmt(oSub)}</div></div>`;
