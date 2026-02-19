@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v6.5.1</title>
+    <title>Dashboard Martín v6.5.2</title>
     <style>
         :root {
             --primary: #1a2a3a;
@@ -30,7 +30,6 @@
         .input-group { display: flex; gap: 10px; padding: 15px var(--card-pad); background: #fcfdfe; border-bottom: 1px solid #eee; flex-wrap: wrap; }
         input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; font-size: 15px; min-width: 110px; }
         button.add-btn { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button.add-btn:hover { opacity: 0.9; }
         
         .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 650px; }
@@ -46,13 +45,11 @@
         .section-total { text-align: right; font-weight: bold; font-size: 1.15rem; padding: 18px var(--card-pad); background: #fff; color: var(--primary); }
 
         .btn-edit { background: #f0f7ff; border: 1px solid #d0e7ff; padding: 4px 8px; border-radius: 4px; color: var(--accent); cursor: pointer; font-size: 11px; }
-        .btn-del { color: #ccc; background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
-        .btn-del:hover { color: var(--danger); }
+        .btn-del { color: #ccc; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
 
         @media (max-width: 600px) {
             #total-general { font-size: 1.9rem; }
             .input-group { flex-direction: column; }
-            .input-group input { width: 100%; }
         }
     </style>
 </head>
@@ -60,7 +57,7 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v6.5.1 - Fix Stocks & FCI Sort</span>
+        <span class="version-tag">v6.5.2 - Master Totals</span>
         <small>Patrimonio Consolidado Martín</small>
         <h1 id="total-general">$ 0,00</h1>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando con Google Sheets...</div>
@@ -88,6 +85,8 @@
                 </thead>
                 <tbody id="stocks-body"></tbody>
                 <tfoot>
+                    <tr id="stocks-total-row" style="background: #f8f9fa; font-weight: bold; border-top: 2px solid #eee;">
+                        </tr>
                     <tr style="background: #fffafa;">
                         <td colspan="5" style="text-align:right; font-weight:bold; color:var(--danger); padding-right: 15px;">MARGEN DEUDA:</td>
                         <td style="text-align:right; padding-right: 15px;"><input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 100px; border: none; background: transparent; text-align: right; font-weight: bold; color: var(--danger); font-size: 14px; padding: 0;"></td>
@@ -146,7 +145,7 @@
     <div class="card" style="border-top-color: var(--otros-color);">
         <h2>💼 Otros (Cajas & Bonus)</h2>
         <div class="input-group">
-            <input type="text" id="new-otro-n" placeholder="Concepto (ej: Bono Anual)">
+            <input type="text" id="new-otro-n" placeholder="Concepto">
             <input type="number" id="new-otro-v" placeholder="Monto USD">
             <button class="add-btn" onclick="addOtro()" style="background: var(--otros-color);">SUMAR</button>
         </div>
@@ -238,7 +237,7 @@
         }
     }
     function editOtro(idx) {
-        const newVal = prompt("Nuevo monto para " + otros[idx].n + ":", otros[idx].v);
+        const newVal = prompt("Monto:", otros[idx].v);
         if (newVal !== null) { otros[idx].v = parseFloat(newVal) || 0; localStorage.setItem('otros', JSON.stringify(otros)); render(); }
     }
     function deleteOtro(idx) {
@@ -250,59 +249,73 @@
     function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); render(); }
 
     function render() {
-        let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0, totalO = 0;
+        let totalS = 0, totalDC = 0, totalFCI = 0, totalM = 0, totalJ = 0, totalO = 0;
 
-        // ACCIONES CON FIX DE PORCENTAJE
+        // 📈 ACCIONES
         let sList = stocks.map(s => {
             const d = sheetData[s.t.toUpperCase()] || {p:0, dc:0, dcp:0};
-            // FIX: Si el valor es decimal (ej 0.1016), lo pasamos a 10.16. Si ya es entero (ej 10.16), queda igual.
             const pct = (Math.abs(d.dcp) < 1.0) ? (d.dcp * 100) : d.dcp;
             return { t: s.t, q: s.q, p: d.p, dc: d.dc, dcp: pct, tot: d.p * s.q };
         });
         sList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
+        
         document.getElementById('stocks-body').innerHTML = sList.map(s => {
-            totalS += s.tot;
+            totalS += s.tot; totalDC += s.dc;
             return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit','${s.t}')">✏️</button></td>
                 <td>$ ${s.p.toFixed(2)}</td><td class="${s.dc>=0?'pos':'neg'}">$ ${fmt(s.dc)}</td>
                 <td class="${s.dcp>=0?'pos':'neg'}">${s.dcp.toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(s.tot)}</td>
                 <td><button onclick="manageStock('delete','${s.t}')" class="btn-del">×</button></td></tr>`;
         }).join('');
+
+        // Fila de Totales en Stocks
+        const totalDC_Pct = totalS > 0 ? (totalDC / (totalS - totalDC)) * 100 : 0;
+        document.getElementById('stocks-total-row').innerHTML = `
+            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
+            <td class="${totalDC>=0?'pos':'neg'}">$ ${fmt(totalDC)}</td>
+            <td class="${totalDC>=0?'pos':'neg'}">${totalDC_Pct.toFixed(2)}%</td>
+            <td style="text-align:right;">$ ${fmt(totalS)}</td>
+            <td></td>
+        `;
         document.getElementById('sub-stocks').innerText = `Net Acciones: $ ${fmt(totalS + margin)}`;
 
-        // FCI CON SORT INDEPENDIENTE
+        // 🇦🇷 FCI CON GRUPOS LÓGICOS
         const fciKeys = Object.keys(sheetData).filter(k => !k.includes(":") && !stocks.some(s => s.t.includes(k)) && !martinFunds.some(m => (m.c||m.n).toUpperCase().includes(k)));
         let fciObjects = fciKeys.map(k => { const d = sheetData[k]; const pScaled = d.p / 1000; return { n: k, q: d.q, p: pScaled, sub: pScaled * d.q }; });
         
-        let g1 = fciObjects.slice(0, 6); // Otros FCI
-        let g2 = fciObjects.slice(6, 8); // Galicia Fima
+        // Separamos: Galicia (Premium, Fima, etc.) vs El resto (Schroder, etc.)
+        let gGalicia = fciObjects.filter(f => f.n.includes("GALICIA") || f.n.includes("FIMA"));
+        let gOtros = fciObjects.filter(f => !f.n.includes("GALICIA") && !f.n.includes("FIMA"));
+
         const fciSorter = (a, b) => (fciSortAsc ? 1 : -1) * (a[fciSortKey] > b[fciSortKey] ? 1 : -1);
-        g1.sort(fciSorter); 
-        g2.sort(fciSorter);
+        gOtros.sort(fciSorter); 
+        gGalicia.sort(fciSorter);
 
         let subF1 = 0, subF2 = 0;
-        let htmlFCI = g1.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
-        htmlFCI += g2.map(f => { subF2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('');
-        if(subF2 > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima)</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
+        let htmlFCI = gOtros.map(f => { subF1 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('') + 
+                      `<tr class="subtotal-row"><td colspan="3">SUBTOTAL OTROS FCI</td><td style="text-align:right;">$ ${fmt(subF1)}</td></tr>`;
+        
+        htmlFCI += gGalicia.map(f => { subF2 += f.sub; return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${f.p.toFixed(6)}</td><td style="text-align:right;">$ ${fmt(f.sub)}</td></tr>`; }).join('');
+        if(subF2 > 0) htmlFCI += `<tr class="subtotal-row"><td colspan="3">SUBTOTAL GALICIA (Fima/Premium)</td><td style="text-align:right;">$ ${fmt(subF2)}</td></tr>`;
         
         document.getElementById('fci-body').innerHTML = htmlFCI;
         totalFCI = subF1 + subF2;
         document.getElementById('sub-fci').innerText = `Total FCI: $ ${fmt(totalFCI)}`;
 
-        // MUTUAL FUNDS MARTÍN
+        // 🏦 MUTUAL FUNDS MARTÍN
         document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
             const d = sheetData[(f.c || f.n).toUpperCase()] || {p:0}; const sub = d.p * f.q; totalM += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${d.p.toFixed(2)}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-martin').innerText = `Total Int: $ ${fmt(totalM)}`;
 
-        // OTROS
+        // 💼 OTROS
         document.getElementById('otros-body').innerHTML = otros.map((o, i) => {
             totalO += o.v;
             return `<tr><td>${o.n} <button class="btn-edit" onclick="editOtro(${i})">✏️</button></td><td style="text-align:right; font-weight:bold;">$ ${fmt(o.v)}</td><td><button onclick="deleteOtro(${i})" class="btn-del">×</button></td></tr>`;
         }).join('');
         document.getElementById('sub-otros').innerText = `Total Otros: $ ${fmt(totalO)}`;
 
-        // TOTAL JORGE
+        // 🏦 TOTAL JORGE
         document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
             const d = sheetData[f.n.toUpperCase()] || {p:0}; const sub = d.p * f.q; totalJ += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
@@ -311,7 +324,7 @@
 
         // TOTAL GENERAL CONSOLIDADO
         const granTotal = totalS + margin + totalFCI + totalM + totalO;
-        document.getElementById('total-general').innerText = `$ ${fmt(granTotal)}`;
+        document.getElementById('total-general').innerText = `$ ${fmt(grandTotal)}`;
     }
 
     fetchData();
