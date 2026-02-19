@@ -32,11 +32,11 @@
     <div class="header">
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
-        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con la nube...</span>
+        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando cantidades con Google Sheets...</span>
     </div>
 
     <div class="card">
-        <h2>📈 Acciones (Net Liquidation)</h2>
+        <h2>📈 Acciones (Sincronización de Cantidades)</h2>
         <div class="input-group">
             <input type="text" id="new-tk" placeholder="Ticker" style="flex: 2;">
             <input type="number" id="new-qty" placeholder="Cantidad" style="flex: 1;">
@@ -98,7 +98,6 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTop-X-Mr1K8n1s0I7a0Dcby_vFO4QZK8DYN8MhMwEui1GuVz40cS7iL5wo80jT6BYcBaiH5m7HbQ2B/pub?gid=0&single=true&output=csv";
 
-    // Data inicial basada en tus imágenes
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
         {t:'BLNK',q:800}, {t:'DNA',q:100}, {t:'LPSN',q:6}, {t:'NAK',q:1000}, {t:'OPEN',q:100}, {t:'SATL',q:500},
         {t:'SOUN',q:200}, {t:'LPTH',q:100}, {t:'BBAI',q:300}, {t:'GRAB',q:200}, {t:'ONDS',q:150}, {t:'NIO',q:250},
@@ -117,7 +116,9 @@
 
     const martinInt = [
         {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545},
-        {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654}
+        {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654},
+        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543},
+        {n:"Thornburg", q:1157.025}, {n:"Ab Sicav I", q:620.444}
     ];
 
     const jorgeInt = [
@@ -147,18 +148,41 @@
     }
 
     async function manageStock(action, ticker = null) {
+        let q = 0;
+        let tk = ticker;
+
         if (action === 'add') {
-            const tk = document.getElementById('new-tk').value.toUpperCase().trim();
-            const q = parseFloat(document.getElementById('new-qty').value) || 0;
-            if (tk) stocks.push({t:tk, q:q});
+            tk = document.getElementById('new-tk').value.toUpperCase().trim();
+            q = parseFloat(document.getElementById('new-qty').value) || 0;
+            if (tk) stocks.push({t:tk, q:q}); else return;
         } else if (action === 'delete') {
             stocks = stocks.filter(s => s.t !== ticker);
         } else if (action === 'edit') {
             const newQ = prompt("Nueva cantidad para " + ticker + ":", "");
-            if (newQ !== null) stocks.find(s => s.t === ticker).q = parseFloat(newQ) || 0;
+            if (newQ !== null) {
+                q = parseFloat(newQ) || 0;
+                stocks.find(s => s.t === ticker).q = q;
+            } else return;
         }
+
+        // 1. Guardar localmente para respuesta inmediata
         localStorage.setItem('stocks', JSON.stringify(stocks));
         render();
+
+        // 2. Escribir en Google Sheets (Ticker y Cantidad)
+        document.getElementById('sync-info').innerText = "Enviando cantidad a la nube...";
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: action, ticker: tk, quantity: q })
+        });
+
+        if(action === 'add') {
+            document.getElementById('new-tk').value = "";
+            document.getElementById('new-qty').value = "";
+        }
+        document.getElementById('sync-info').innerText = "Sincronizado ✅";
+        setTimeout(fetchData, 1500);
     }
 
     function setSort(key) {
@@ -176,7 +200,6 @@
     function render() {
         let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0;
         
-        // ACCIONES
         let stockList = stocks.map(s => {
             const d = sheetPrices[s.t] || {p:0, dc:0, dcp:0};
             return { ...s, p: d.p, dc: d.dc, dcp: d.dcp, tot: d.p * s.q };
@@ -192,7 +215,6 @@
         }).join('');
         document.getElementById('sub-stocks').innerText = `Subtotal Acciones (Neto): $ ${fmt(totalS + margin)}`;
 
-        // FCI
         document.getElementById('fci-body').innerHTML = fcis.map(f => {
             const p = sheetPrices[f.n.toUpperCase()]?.p || 0;
             const sub = p * f.q; totalFCI += sub;
@@ -200,7 +222,6 @@
         }).join('');
         document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
 
-        // MARTÍN
         document.getElementById('martin-body').innerHTML = martinInt.map(f => {
             const p = sheetPrices[(f.c || f.n).toUpperCase()]?.p || 0;
             const sub = p * f.q; totalM += sub;
@@ -208,7 +229,6 @@
         }).join('');
         document.getElementById('sub-martin').innerText = `Subtotal Martín: $ ${fmt(totalM)}`;
 
-        // JORGE
         document.getElementById('jorge-body').innerHTML = jorgeInt.map(f => {
             const p = sheetPrices[f.n.toUpperCase()]?.p || 0;
             const sub = p * f.q; totalJ += sub;
@@ -217,7 +237,6 @@
         document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $ ${fmt(totalJ)}`;
 
         document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI + totalM)}`;
-        document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString();
     }
 
     document.getElementById('margin-input').value = margin;
