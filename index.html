@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Martín v4.3</title>
+    <title>Dashboard Martín v4.5</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
         .container { max-width: 1250px; margin: auto; }
@@ -31,7 +31,7 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v4.3 - Stable Build</span>
+        <span class="version-tag">v4.5 - Fix Precios & %</span>
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
         <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</span>
@@ -42,7 +42,7 @@
         <div class="input-group">
             <input type="text" id="new-tk" placeholder="Ticker (ej: ARKG)" style="flex: 2;">
             <input type="number" id="new-qty" placeholder="Cant." style="flex: 1;">
-            <button onclick="manageStock('add')" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Agregar e Informar</button>
+            <button onclick="manageStock('add')" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Agregar</button>
         </div>
         <table>
             <thead>
@@ -52,7 +52,7 @@
                     <th onclick="setSort('p')">Precio ↕</th>
                     <th onclick="setSort('dc')">Day Chg $ ↕</th>
                     <th onclick="setSort('dcp')">Day Chg % ↕</th>
-                    <th onclick="setSort('tot')" style="text-align: right;">Subtotal ↕</th>
+                    <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
                     <th></th>
                 </tr>
             </thead>
@@ -61,13 +61,13 @@
                 <tr style="color: #e74c3c; font-weight: bold;">
                     <td colspan="5" style="text-align: right;">MARGEN (DEUDA):</td>
                     <td style="text-align: right;">
-                        <input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 120px; text-align: right; font-weight: bold;">
+                        <input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" style="width: 120px; text-align: right; font-weight: bold; border: 1px solid #ddd;">
                     </td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
-        <div class="section-total" id="sub-stocks">Total Acciones: $ 0,00</div>
+        <div class="section-total" id="sub-stocks">Net Liquidation: $ 0,00</div>
     </div>
 
     <div class="card fci-card">
@@ -85,7 +85,7 @@
             <thead><tr><th>Fondo</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="martin-body"></tbody>
         </table>
-        <div class="section-total" id="sub-martin">Subtotal Internacional: $ 0,00</div>
+        <div class="section-total" id="sub-martin">Subtotal Martín: $ 0,00</div>
     </div>
 
     <div class="card jorge-card">
@@ -102,7 +102,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTop-X-Mr1K8n1s0I7a0Dcby_vFO4QZK8DYN8MhMwEui1GuVz40cS7iL5wo80jT6BYcBaiH5m7HbQ2B/pub?gid=0&single=true&output=csv";
 
-    // Base de datos local para renderizado inmediato
+    // Data inicial
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
         {t:'BATS:ARKK',q:110}, {t:'BATS:ARKG',q:100}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}
     ];
@@ -110,13 +110,14 @@
     const fciData = [
         {n:"BAL.AHUSD.A", q:15229.046}, {n:"C.MIII.A", q:33099.893}, {n:"COM.BEST.IDEASA", q:36855.941},
         {n:"IAM.RENDOL.A", q:15464.026}, {n:"MAF.MIXII.D", q:8778.378}, {n:"SCH.RT.A", q:18693.75},
-        {n:"Fima Renta B", q:92357.32}, {n:"Fima Renta A", q:1803.79}
+        {n:"FIMA RENTA B", q:92357.32}, {n:"FIMA RENTA A", q:1803.79}
     ];
 
     const martinInt = [
         {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545},
         {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654},
-        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543}
+        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543},
+        {n:"Thornburg", q:1157.025}, {n:"Ab Sicav I", q:620.444}
     ];
 
     const jorgeInt = [
@@ -132,16 +133,20 @@
 
     async function fetchData() {
         try {
-            const response = await fetch(CSV_URL);
+            // Agregamos un timestamp para forzar a Google a darnos los datos nuevos
+            const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
             const text = await response.text();
             const rows = text.split('\n').slice(1);
+            
+            sheetPrices = {};
             rows.forEach(row => {
                 const cols = row.split(',');
-                if (cols[0]) {
-                    sheetPrices[cols[0].trim().toUpperCase()] = {
+                const tk = (cols[0] || '').trim().toUpperCase();
+                if (tk) {
+                    sheetPrices[tk] = {
                         p: parseFloat(cols[2])||0,
-                        dc: parseFloat(cols[5])||0, // Columna F
-                        dcp: parseFloat(cols[4])||0  // Columna E
+                        dc: parseFloat(cols[5])||0, // Cambio $ Total (Columna F)
+                        dcp: parseFloat(cols[4])||0  // Cambio % (Columna E)
                     };
                 }
             });
@@ -172,7 +177,7 @@
         localStorage.setItem('stocks', JSON.stringify(stocks));
         render();
 
-        // Envío forzado al Sheets
+        // Envío al Apps Script
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -183,7 +188,7 @@
             document.getElementById('new-tk').value = "";
             document.getElementById('new-qty').value = "";
         }
-        setTimeout(fetchData, 1500);
+        setTimeout(fetchData, 2000);
     }
 
     function setSort(key) {
@@ -210,17 +215,20 @@
 
         document.getElementById('stocks-body').innerHTML = sList.map(s => {
             totalS += s.tot;
+            // Corregimos porcentaje: si el sheet tiene 1.77, mostramos 1.77%
+            const pctDisplay = (s.dcp > 1 || s.dcp < -1) ? s.dcp : (s.dcp * 100);
+            
             return `<tr>
                 <td><b>${s.t}</b></td>
                 <td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit', '${s.t}')">✏️</button></td>
                 <td>$ ${s.p.toFixed(2)}</td>
                 <td class="${s.dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(s.dc)}</td>
-                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${(s.dcp * 100).toFixed(2)}%</td>
+                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${pctDisplay.toFixed(2)}%</td>
                 <td class="subtotal">$ ${fmt(s.tot)}</td>
                 <td><button class="btn-del" onclick="manageStock('delete', '${s.t}')">×</button></td>
             </tr>`;
         }).join('');
-        document.getElementById('sub-stocks').innerText = `Subtotal Acciones (Neto): $ ${fmt(totalS + margin)}`;
+        document.getElementById('sub-stocks').innerText = `Net Liquidation: $ ${fmt(totalS + margin)}`;
 
         // FCI
         document.getElementById('fci-body').innerHTML = fciData.map(f => {
@@ -237,7 +245,7 @@
             const sub = p * f.q; totalM += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-martin').innerText = `Subtotal Internacional: $ ${fmt(totalM)}`;
+        document.getElementById('sub-martin').innerText = `Subtotal Martín: $ ${fmt(totalM)}`;
 
         // JORGE
         document.getElementById('jorge-body').innerHTML = jorgeInt.map(f => {
