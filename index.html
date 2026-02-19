@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v14.0</title>
+    <title>Dashboard Martín v16.0</title>
     <style>
-        :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --cp: 20px; }
+        :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         .header { background: var(--p); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
@@ -14,33 +14,36 @@
         h2 { padding: 0 var(--cp) 12px var(--cp); margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0; }
         .table-wrap { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; text-align: left; }
+        th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; cursor: pointer; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13px; white-space: nowrap; }
         .pos { color: var(--s); font-weight: bold; }
         .neg { color: var(--d); font-weight: bold; }
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--cp); background: #fff; border-top: 1px solid #eee; }
+        input.margin-edit { width: 110px; border: 1px solid #ddd; padding: 4px; text-align: right; font-weight: bold; color: var(--d); border-radius: 4px; background: #fffafa; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <small>PATRIMONIO CONSOLIDADO</small>
+        <small>PATRIMONIO CONSOLIDADO MARTÍN</small>
         <h1 id="total-general">$ 0,00</h1>
-        <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizado ✅</div>
+        <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
     </div>
     <div id="cards-container"></div>
 </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
-    const margin = -269051; 
+    let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
+    let sortConfig = { key: 'sub', asc: false };
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     const categories = {
         "STOCKS": { label: "📈 Acciones", color: "var(--a)" },
         "FCI": { label: "🇦🇷 Fondos Argentina", color: "var(--s)" },
         "MARTIN": { label: "🏦 Mutual Funds - Martín", color: "var(--m)" },
-        "JORGE": { label: "🏦 Mutual Funds - Jorge", color: "var(--j)" }
+        "JORGE": { label: "🏦 Mutual Funds - Jorge", color: "var(--j)" },
+        "OTROS": { label: "💼 Otros Activos", color: "var(--o)" }
     };
 
     async function fetchData() {
@@ -48,45 +51,56 @@
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
             render(data);
+            document.getElementById('sync-info').innerText = "Sincronizado ✅";
         } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
+    }
+
+    function setSort(key) {
+        sortConfig.asc = (sortConfig.key === key) ? !sortConfig.asc : false;
+        sortConfig.key = key;
+        fetchData();
     }
 
     function render(data) {
         let globalTotal = 0;
-        let catsData = { STOCKS: {html:"", sub:0, dc:0}, FCI: {html:"", sub:0, dc:0}, MARTIN: {html:"", sub:0, dc:0}, JORGE: {html:"", sub:0, dc:0} };
+        let catsData = {};
+        for (let k in categories) catsData[k] = { items: [], sub: 0, dc: 0 };
 
         data.forEach(r => {
-            const cat = (r[6] || "").toUpperCase().trim(); // Columna G
+            const cat = (r[6] || "OTROS").toString().toUpperCase().trim();
             if (!catsData[cat]) return;
-
-            const name = r[0]; // Ticker
+            
             const q = parseFloat(r[1]) || 0; 
-            const p = parseFloat(r[2]) || 0; 
-            const dc_val = parseFloat(r[5]) || 0; // Cambio Dia $ x Q
-            const dc_pct = parseFloat(r[4]) || 0; // Cambio Dia %
-            const sub = p * q;
+            const p = parseFloat(r[2]) || 0;
+            const dc_v = parseFloat(r[5]) || 0; // Cambio Dia $ x Q
+            const dc_p = parseFloat(r[4]) || 0; // Cambio Dia %
+            const isFCI = (cat === "FCI");
+            
+            // Fix escala FCI (Dividir por 1000)
+            const subVal = isFCI ? (p * q) / 1000 : (p * q);
+            const dcDisp = isFCI ? dc_v / 1000 : dc_v;
 
-            catsData[cat].sub += sub;
-            catsData[cat].dc += dc_val;
-
-            const pDisp = cat === "FCI" ? (p/1000).toFixed(6) : p.toFixed(2);
-            const dcDisp = cat === "FCI" ? dc_val/1000 : dc_val;
-            const pctDisp = (Math.abs(dc_pct) < 1.0) ? (dc_pct * 100) : dc_pct;
-
-            catsData[cat].html += `<tr>
-                <td><b>${name}</b></td>
-                <td>${q.toLocaleString()}</td>
-                <td>$ ${pDisp}</td>
-                <td class="${dcDisp>=0?'pos':'neg'}">$ ${fmt(dcDisp)}</td>
-                <td class="${pctDisp>=0?'pos':'neg'}">${pctDisp.toFixed(2)}%</td>
-                <td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td>
-            </tr>`;
+            catsData[cat].items.push({ 
+                n: r[0], q, p: isFCI ? p/1000 : p, 
+                dc_v: dcDisp, dc_p: (Math.abs(dc_p) < 1.0 ? dc_p * 100 : dc_p), 
+                sub: subVal 
+            });
+            catsData[cat].sub += subVal;
+            catsData[cat].dc += dcDisp;
         });
 
         let containerHtml = "";
         for (const [key, config] of Object.entries(categories)) {
-            const d = catsData[key];
-            if (d.html === "") continue;
+            const d = catsData[key]; if (d.items.length === 0) continue;
+
+            d.items.sort((a, b) => (sortConfig.asc ? 1 : -1) * (a[sortConfig.key] > b[sortConfig.key] ? 1 : -1));
+
+            let rows = d.items.map(i => `<tr>
+                <td><b>${i.n}</b></td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(key==="FCI"?6:2)}</td>
+                <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
+                <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
+                <td style="text-align:right;">$ ${fmt(i.sub)}</td>
+            </tr>`).join('');
 
             const netSub = key === "STOCKS" ? (d.sub + margin) : d.sub;
             const netAyer = netSub - d.dc;
@@ -98,22 +112,34 @@
                     <h2>${config.label}</h2>
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align: right;">Total</th></tr></thead>
-                            <tbody>${d.html}</tbody>
+                            <thead><tr>
+                                <th onclick="setSort('n')">Activo ↕</th>
+                                <th onclick="setSort('q')">Cant. ↕</th>
+                                <th>Precio</th>
+                                <th>Día $</th>
+                                <th>Día %</th>
+                                <th style="text-align: right;" onclick="setSort('sub')">Total ↕</th>
+                            </tr></thead>
+                            <tbody>${rows}</tbody>
+                            ${key === "STOCKS" ? `<tfoot>
+                                <tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${netPct>=0?'pos':'neg'}">${netPct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(d.sub)}</td></tr>
+                                <tr style="background:#fffafa;"><td colspan="5" style="text-align:right; font-weight:bold; color:var(--d);">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="margin-edit" value="${margin}" onchange="updateMargin(this.value)"></td></tr>
+                            </tfoot>` : `<tfoot>
+                                <tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</td><td class="${netPct>=0?'pos':'neg'}">${netPct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(d.sub)}</td></tr>
+                            </tfoot>`}
                         </table>
                     </div>
                     <div class="section-total">
-                        Total Día $: <span class="${d.dc>=0?'pos':'neg'}">$ ${fmt(d.dc)}</span> | 
-                        Var. Día: <span class="${d.dc>=0?'pos':'neg'}">${netPct.toFixed(2)}%</span> | 
-                        ${key === "STOCKS" ? 'Neto: ' : 'Subtotal: '} $ ${fmt(netSub)}
+                        ${key === "STOCKS" ? 'Net Acciones (inc. Margen): ' : 'Subtotal: '} $ ${fmt(netSub)} | Var. Día: <span class="${d.dc>=0?'pos':'neg'}">${netPct.toFixed(2)}%</span>
                     </div>
                 </div>`;
         }
         document.getElementById('cards-container').innerHTML = containerHtml;
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
     }
-    fetchData();
-    setInterval(fetchData, 60000);
+
+    function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); fetchData(); }
+    fetchData(); setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
