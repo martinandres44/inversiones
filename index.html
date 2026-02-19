@@ -2,15 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Martín v4.5</title>
+    <title>Dashboard Martín v4.6</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
-        .container { max-width: 1250px; margin: auto; }
+        .container { max-width: 1300px; margin: auto; }
         .header { background: #1a2a3a; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; position: relative; }
         .version-tag { position: absolute; top: 10px; right: 20px; font-size: 12px; color: #3498db; font-weight: bold; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; color: #95a5a6; font-size: 11px; padding: 12px; text-transform: uppercase; cursor: pointer; background: #fdfdfd; }
         th:hover { background: #f0f7ff; color: #3498db; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
@@ -18,7 +18,7 @@
         .neg { color: #e74c3c; font-weight: bold; }
         .subtotal { font-weight: bold; text-align: right; }
         .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
-        .btn-edit { background: none; border: none; cursor: pointer; color: #3498db; font-size: 14px; }
+        .btn-edit { background: none; border: none; cursor: pointer; color: #3498db; font-size: 14px; margin-left: 5px; }
         .btn-del { color: #e74c3c; background: none; border: none; cursor: pointer; font-weight: bold; font-size: 18px; }
         .input-group { background: #ebf2f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; }
         input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
@@ -31,16 +31,16 @@
 
 <div class="container">
     <div class="header">
-        <span class="version-tag">v4.5 - Fix Precios & %</span>
+        <span class="version-tag">Versión v4.6 (Stable)</span>
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
         <h1 id="total-general">$ 0,00</h1>
-        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Sincronizando con Google Sheets...</span>
+        <span id="sync-info" style="font-size: 11px; opacity: 0.8;">Iniciando sincronización...</span>
     </div>
 
     <div class="card">
-        <h2>📈 Acciones (Net Liquidation)</h2>
+        <h2>📈 Acciones</h2>
         <div class="input-group">
-            <input type="text" id="new-tk" placeholder="Ticker (ej: ARKG)" style="flex: 2;">
+            <input type="text" id="new-tk" placeholder="Ticker (ej: SNOW)" style="flex: 2;">
             <input type="number" id="new-qty" placeholder="Cant." style="flex: 1;">
             <button onclick="manageStock('add')" style="background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Agregar</button>
         </div>
@@ -52,7 +52,7 @@
                     <th onclick="setSort('p')">Precio ↕</th>
                     <th onclick="setSort('dc')">Day Chg $ ↕</th>
                     <th onclick="setSort('dcp')">Day Chg % ↕</th>
-                    <th onclick="setSort('tot')" style="text-align: right;">Total ↕</th>
+                    <th onclick="setSort('tot')" style="text-align: right;">Subtotal ↕</th>
                     <th></th>
                 </tr>
             </thead>
@@ -67,12 +67,12 @@
                 </tr>
             </tfoot>
         </table>
-        <div class="section-total" id="sub-stocks">Net Liquidation: $ 0,00</div>
+        <div class="section-total" id="sub-stocks">Total Acciones Neto: $ 0,00</div>
     </div>
 
     <div class="card fci-card">
         <h2>🇦🇷 Fondos Comunes (FCI)</h2>
-        <table>
+        <table id="fci-table">
             <thead><tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="fci-body"></tbody>
         </table>
@@ -100,11 +100,16 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTop-X-Mr1K8n1s0I7a0Dcby_vFO4QZK8DYN8MhMwEui1GuVz40cS7iL5wo80jT6BYcBaiH5m7HbQ2B/pub?gid=0&single=true&output=csv";
-
-    // Data inicial
+    
+    // Lista base de tickers y cantidades
     let stocks = JSON.parse(localStorage.getItem('stocks')) || [
-        {t:'BATS:ARKK',q:110}, {t:'BATS:ARKG',q:100}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}
+        {t:'BATS:ARKK',q:110}, {t:'ASTS',q:500}, {t:'IREN',q:450}, {t:'PLTR',q:450}, {t:'LMND',q:300}, {t:'AFRM',q:375},
+        {t:'BLNK',q:800}, {t:'DNA',q:100}, {t:'LPSN',q:6}, {t:'NAK',q:1000}, {t:'OPEN',q:100}, {t:'SATL',q:500},
+        {t:'SOUN',q:200}, {t:'LPTH',q:100}, {t:'BBAI',q:300}, {t:'GRAB',q:200}, {t:'ONDS',q:150}, {t:'NIO',q:250},
+        {t:'EOSE',q:200}, {t:'ZETA',q:200}, {t:'RKLB',q:50}, {t:'BABA',q:20}, {t:'MSTR',q:30}, {t:'CIFR',q:300},
+        {t:'JOBY',q:550}, {t:'HIMS',q:300}, {t:'CRWV',q:50}, {t:'TMDX',q:40}, {t:'SHOP',q:45}, {t:'AVGO',q:20},
+        {t:'NU',q:400}, {t:'SE',q:75}, {t:'SOFI',q:500}, {t:'UPST',q:500}, {t:'MELI',q:8}, {t:'MU',q:47},
+        {t:'TSLA',q:60}, {t:'AMD',q:125}, {t:'KO',q:397.333}, {t:'NVDA',q:250.092}
     ];
 
     const fciData = [
@@ -113,14 +118,14 @@
         {n:"FIMA RENTA B", q:92357.32}, {n:"FIMA RENTA A", q:1803.79}
     ];
 
-    const martinInt = [
-        {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545},
-        {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654},
-        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543},
-        {n:"Thornburg", q:1157.025}, {n:"Ab Sicav I", q:620.444}
+    const martinFunds = [
+        {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", c:"G5648E661", q:2582.186},
+        {n:"Janus Henderson", q:1727.545}, {n:"Pimco Global", q:808.112}, {n:"Thornburg", q:1157.025},
+        {n:"Allianz Income", q:1421.231}, {n:"Ab Sicav I", q:620.444}, {n:"Franklin U.S.", q:357.654},
+        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543}
     ];
 
-    const jorgeInt = [
+    const jorgeFunds = [
         {n:"Fed. Hermes", q:3819.89}, {n:"Janus Henderson", q:5034.388}, {n:"Allianz Income", q:6315.422},
         {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}
     ];
@@ -133,27 +138,24 @@
 
     async function fetchData() {
         try {
-            // Agregamos un timestamp para forzar a Google a darnos los datos nuevos
-            const response = await fetch(CSV_URL + "&cachebuster=" + new Date().getTime());
-            const text = await response.text();
-            const rows = text.split('\n').slice(1);
+            const res = await fetch(SCRIPT_URL);
+            const data = await res.json();
             
             sheetPrices = {};
-            rows.forEach(row => {
-                const cols = row.split(',');
-                const tk = (cols[0] || '').trim().toUpperCase();
-                if (tk) {
-                    sheetPrices[tk] = {
-                        p: parseFloat(cols[2])||0,
-                        dc: parseFloat(cols[5])||0, // Cambio $ Total (Columna F)
-                        dcp: parseFloat(cols[4])||0  // Cambio % (Columna E)
+            data.slice(1).forEach(r => {
+                if(r[0]) {
+                    const tk = r[0].toString().toUpperCase().trim();
+                    sheetPrices[tk] = { 
+                        p: parseFloat(r[2]) || 0, 
+                        dc: parseFloat(r[5]) || 0, // Columna F (Change $ x Q)
+                        dcp: parseFloat(r[4]) || 0  // Columna E (Change %)
                     };
                 }
             });
-            document.getElementById('sync-info').innerText = "Sincronizado ✅";
+            document.getElementById('sync-info').innerText = "Sincronizado ✅ " + new Date().toLocaleTimeString();
             render();
         } catch (e) {
-            document.getElementById('sync-info').innerText = "Error de conexión ❌";
+            document.getElementById('sync-info').innerText = "Error de sincronización ❌";
             render();
         }
     }
@@ -163,8 +165,10 @@
         if (action === 'add') {
             tk = document.getElementById('new-tk').value.toUpperCase().trim();
             q = parseFloat(document.getElementById('new-qty').value) || 0;
+            if (!tk) return;
+            // Forzar BATS para ETFs si no tiene mercado especificado
             if (!tk.includes(":")) tk = "BATS:" + tk;
-            if (tk) stocks.push({t:tk, q:q});
+            stocks.push({t:tk, q:q});
         } else if (action === 'edit') {
             const nq = prompt("Nueva cantidad para " + ticker + ":");
             if (nq === null) return;
@@ -177,13 +181,13 @@
         localStorage.setItem('stocks', JSON.stringify(stocks));
         render();
 
-        // Envío al Apps Script
+        document.getElementById('sync-info').innerText = "Informando al Sheets...";
         fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({ action: action, ticker: tk, quantity: q })
         });
-
+        
         if(action === 'add') {
             document.getElementById('new-tk').value = "";
             document.getElementById('new-qty').value = "";
@@ -205,30 +209,34 @@
 
     function render() {
         let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0;
-
+        
         // ACCIONES
-        let sList = stocks.map(s => {
-            const d = sheetPrices[s.t] || {p:0, dc:0, dcp:0};
+        let stockList = stocks.map(s => {
+            // Buscamos el precio con o sin el prefijo para evitar que quede en cero
+            const cleanT = s.t.includes(":") ? s.t.split(":")[1] : s.t;
+            const d = sheetPrices[s.t] || sheetPrices[cleanT] || sheetPrices["BATS:" + s.t] || {p:0, dc:0, dcp:0};
             return { ...s, p: d.p, dc: d.dc, dcp: d.dcp, tot: d.p * s.q };
         });
-        sList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
+        
+        stockList.sort((a, b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
 
-        document.getElementById('stocks-body').innerHTML = sList.map(s => {
+        document.getElementById('stocks-body').innerHTML = stockList.map(s => {
             totalS += s.tot;
-            // Corregimos porcentaje: si el sheet tiene 1.77, mostramos 1.77%
-            const pctDisplay = (s.dcp > 1 || s.dcp < -1) ? s.dcp : (s.dcp * 100);
+            // Corregimos porcentaje: si es 0.0155, mostrar 1.55%
+            const pct = (s.dcp < 1 && s.dcp > -1) ? (s.dcp * 100) : s.dcp;
             
             return `<tr>
                 <td><b>${s.t}</b></td>
                 <td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit', '${s.t}')">✏️</button></td>
                 <td>$ ${s.p.toFixed(2)}</td>
                 <td class="${s.dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(s.dc)}</td>
-                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${pctDisplay.toFixed(2)}%</td>
+                <td class="${s.dcp >= 0 ? 'pos' : 'neg'}">${pct.toFixed(2)}%</td>
                 <td class="subtotal">$ ${fmt(s.tot)}</td>
                 <td><button class="btn-del" onclick="manageStock('delete', '${s.t}')">×</button></td>
             </tr>`;
         }).join('');
-        document.getElementById('sub-stocks').innerText = `Net Liquidation: $ ${fmt(totalS + margin)}`;
+        
+        document.getElementById('sub-stocks').innerText = `Total Acciones (Neto): $ ${fmt(totalS + margin)}`;
 
         // FCI
         document.getElementById('fci-body').innerHTML = fciData.map(f => {
@@ -239,7 +247,7 @@
         document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
 
         // MARTÍN
-        document.getElementById('martin-body').innerHTML = martinInt.map(f => {
+        document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
             const key = (f.c || f.n).toUpperCase();
             const p = sheetPrices[key]?.p || 0;
             const sub = p * f.q; totalM += sub;
@@ -248,7 +256,7 @@
         document.getElementById('sub-martin').innerText = `Subtotal Martín: $ ${fmt(totalM)}`;
 
         // JORGE
-        document.getElementById('jorge-body').innerHTML = jorgeInt.map(f => {
+        document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
             const p = sheetPrices[f.n.toUpperCase()]?.p || 0;
             const sub = p * f.q; totalJ += sub;
             return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td class="subtotal">$ ${fmt(sub)}</td></tr>`;
@@ -261,7 +269,7 @@
 
     document.getElementById('margin-input').value = margin;
     fetchData();
-    setInterval(fetchData, 60000);
+    setInterval(fetchData, 60000); // Auto-sync cada 1 minuto
 </script>
 </body>
 </html>
