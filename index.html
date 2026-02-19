@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Patrimonio v24.1</title>
+    <title>Dashboard Patrimonio v24.2</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -21,7 +21,7 @@
         .neg { color: var(--d); font-weight: bold; }
         .subtotal-row { background-color: #f8fbff; font-weight: bold; color: var(--p); }
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--cp); background: #fff; border-top: 1px solid #eee; }
-        input.edit-in { border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 13px; width: 85%; }
+        input.edit-in { border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 13px; width: 80%; }
         .btn-tool { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; }
         .btn-tool:hover { opacity: 1; }
         .btn-save { background: var(--a); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
@@ -52,6 +52,7 @@
         try {
             const res = await fetch(SCRIPT_URL);
             db = await res.json();
+            // Default Otros si viene vacío
             if (db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
@@ -75,7 +76,7 @@
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
-    function delRow(type, i) { if(confirm('¿Eliminar?')) { db[type.toLowerCase()].splice(i, 1); render(); } }
+    function delRow(type, i) { if(confirm('¿Eliminar línea?')) { db[type.toLowerCase()].splice(i, 1); render(); } }
 
     function render() {
         let globalTotal = 0, globalDC = 0;
@@ -95,7 +96,7 @@
 
         let containerHtml = "";
 
-        // --- SECCIÓN ACCIONES ---
+        // --- ACCIONES (Edición corregida) ---
         if (cats.STOCKS.length > 0) {
             cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sSub = 0, sDc = 0;
@@ -108,7 +109,7 @@
                     <td>$ ${i.p.toFixed(2)}</td>
                     <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
                     <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
-                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canEdit ? `<button onclick="delRow('EXTRA',${i.idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; margin-left:5px;">×</button>` : ''}</td>
+                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canEdit ? `<button onclick="delRow('EXTRA',${i.idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold; margin-left:10px;">×</button>` : ''}</td>
                 </tr>`;
             }).join('');
             const net = sSub + margin;
@@ -116,7 +117,7 @@
             containerHtml += createCard("📈 Acciones", "var(--a)", rows, sDc, sSub, net, true);
         }
 
-        // --- SECCIÓN FCI ---
+        // --- FCI (Limpio y en orden) ---
         if (cats.FCI.length > 0) {
             cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
@@ -133,7 +134,7 @@
             containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rows, tDc, tSub, tSub);
         }
 
-        // --- SECCIÓN MARTIN ---
+        // --- MARTIN ---
         if (cats.MARTIN.length > 0) {
             let mSub = 0, mDc = 0;
             let rows = cats.MARTIN.map(i => { mSub += i.sub; mDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
@@ -141,15 +142,18 @@
             containerHtml += createCard("🏦 Mutual Funds - Martín", "var(--m)", rows, mDc, mSub, mSub);
         }
 
-        // --- SECCIÓN JORGE (Informativo) ---
+        // --- JORGE ---
         if (cats.JORGE.length > 0) {
             let jSub = 0, jDc = 0;
             let rows = cats.JORGE.map(i => { jSub += i.sub; jDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rows, jDc, jSub, jSub);
         }
 
-        // --- SECCIÓN OTROS (CRUD) ---
+        // --- OTROS (CON SORT POR MONTO) ---
         let oSub = 0;
+        // Ordenamos Otros por monto (columna 1) de mayor a menor
+        db.otros.sort((a, b) => b[1] - a[1]);
+        
         let oRows = db.otros.map((item, i) => {
             oSub += item[1];
             return `<tr><td>${editModes.Otros ? `<input class="edit-in" value="${item[0]}" onchange="updateVal('OTROS',${i},0,this.value)">` : `<b>${item[0]}</b>`}</td><td style="text-align:right;">${editModes.Otros ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateVal('OTROS',${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td><td class="${editModes.Otros?'':'hidden'}"><button onclick="delRow('OTROS',${i})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button></td></tr>`;
