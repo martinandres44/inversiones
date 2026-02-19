@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Martín v22.0</title>
+    <title>Dashboard Patrimonio v22.1</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
@@ -32,7 +32,7 @@
 <body>
 <div class="container">
     <div class="header">
-        <small>PATRIMONIO CONSOLIDADO MARTÍN</small>
+        <small>PATRIMONIO CONSOLIDADO</small>
         <div id="total-general">$ 0,00</div>
         <div id="header-dc" class="header-dc">--</div>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
@@ -41,7 +41,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "URL_DE_TU_SCRIPT_ACA";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
     let db = { main: [], otros: [], extra: [] };
     let editModes = { STOCKS: false, Otros: false };
@@ -58,14 +58,13 @@
     }
 
     async function saveData(type) {
-        document.getElementById('sync-info').innerText = "Guardando en Sheets...";
+        document.getElementById('sync-info').innerText = "Guardando...";
         const data = type === 'OTROS' ? db.otros.map(i => ({n:i[0], v:i[1]})) : db.extra.map(i => ({n:i[0], q:i[1], p:i[2], dc_v:i[3], dc_p:i[4]}));
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type, data }) });
         editModes[type === 'OTROS' ? 'Otros' : 'STOCKS'] = false;
         fetchData();
     }
 
-    // --- FUNCIONES DE EDICIÓN ---
     function toggleEdit(sec) { editModes[sec] = !editModes[sec]; render(); }
     
     function updateVal(type, i, col, val) { 
@@ -86,16 +85,24 @@
         let globalTotal = 0, globalDC = 0;
         let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
 
-        // 1. Procesar Datos de Sheets + Extras Sincronizados
+        // 1. Unificar Sheets y Manuales
         const combinedStocks = [...db.main.filter(r => r[6]==="STOCKS"), ...db.extra];
-        const allData = [...combinedStocks, ...db.main.filter(r => r[6]!=="STOCKS")];
+        const otherCategories = db.main.filter(r => r[6]!=="STOCKS");
+        const allData = [...combinedStocks, ...otherCategories];
 
         allData.forEach((r, idx) => {
             const cat = (r[6] || "OTROS").toString().toUpperCase().trim();
             if (!cats[cat]) return;
             const q = parseFloat(r[1])||0, p = parseFloat(r[2])||0, dc_v = parseFloat(r[5]||r[3])||0, dc_p = parseFloat(r[4])||0;
             const isFCI = (cat === "FCI"), sub = isFCI ? (p*q)/1000 : (p*q);
-            cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v: isFCI ? dc_v/1000 : dc_v, dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, sub, isExtra: idx >= db.main.length, idx: idx - db.main.length });
+            cats[cat].push({ 
+                n: r[0], q, p: isFCI ? p/1000 : p, 
+                dc_v: isFCI ? dc_v/1000 : dc_v, 
+                dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, 
+                sub, 
+                isExtra: (cat === 'STOCKS' && idx >= db.main.filter(x => x[6]==="STOCKS").length),
+                idx: (cat === 'STOCKS' && idx >= db.main.filter(x => x[6]==="STOCKS").length) ? (idx - db.main.filter(x => x[6]==="STOCKS").length) : -1
+            });
         });
 
         let containerHtml = "";
@@ -106,7 +113,7 @@
             let sSub = 0, sDc = 0;
             let rowsHtml = d.map(i => {
                 sSub += i.sub; sDc += i.dc_v;
-                const canEdit = i.isExtra && editModes.STOCKS && key === 'STOCKS';
+                const canEdit = i.isExtra && editModes.STOCKS;
                 return `<tr>
                     <td>${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateVal('EXTRA',${i.idx},0,this.value)">` : `<b>${i.n}</b>`}</td>
                     <td>${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateVal('EXTRA',${i.idx},1,this.value)">` : i.q.toLocaleString()}</td>
@@ -120,14 +127,14 @@
             const netS = key === "STOCKS" ? sSub + margin : sSub;
             if (key !== "JORGE") { globalTotal += netS; globalDC += sDc; }
             const color = {STOCKS:'var(--a)', FCI:'var(--s)', MARTIN:'var(--m)', JORGE:'var(--j)'}[key];
+            const title = {STOCKS:'📈 Acciones', FCI:'🇦🇷 Fondos Argentina', MARTIN:'🏦 Mutual Funds - Martín', JORGE:'🏦 Mutual Funds - Jorge (Info)'}[key];
             
             containerHtml += `<div class="card" style="border-top-color: ${color}">
-                <h2>${{STOCKS:'📈 Acciones', FCI:'🇦🇷 Fondos Argentina', MARTIN:'🏦 Mutual Funds - Martín', JORGE:'🏦 Mutual Funds - Jorge (Info)'}[key]} 
-                    ${key==='STOCKS' ? `<span><button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">GUARDAR</button>` : ''}</span>` : ''}</h2>
+                <h2>${title} ${key==='STOCKS' ? `<span><button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">GUARDAR</button>` : ''}</span>` : ''}</h2>
                 <div class="table-wrap"><table>
-                    <thead><tr><th onclick="setSort('n')">Activo ↕</th><th>Cant.</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
+                    <thead><tr><th onclick="setSort('n')">Activo ↕</th><th onclick="setSort('q')">Cant ↕</th><th onclick="setSort('p')">Precio ↕</th><th>Día $</th><th>Día %</th><th style="text-align:right" onclick="setSort('sub')">Total ↕</th></tr></thead>
                     <tbody>${rowsHtml}</tbody>
-                    <tfoot><tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)}</td><td class="${sDc>=0?'pos':'neg'}">${((sSub-sDc)!==0?sDc/(sSub-sDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sSub)}</td></tr>
+                    <tfoot><tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)}</td><td class="${sDc>=0?'pos':'neg'}">${((sSub-sDc)!==0?(sDc/(sSub-sDc)*100):0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sSub)}</td></tr>
                     ${key==='STOCKS' ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="edit-in" style="width:100px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();"></td></tr>` : ''}</tfoot>
                 </table></div>
                 <div class="section-total">Subtotal: $ ${fmt(netS)}</div>
@@ -144,6 +151,7 @@
                 <td class="${editModes.Otros ? '' : 'hidden'}"><button class="btn-del" onclick="delRow('OTROS',${i})">×</button></td>
             </tr>`;
         }).join('');
+
         containerHtml += `<div class="card" style="border-top-color: var(--o)">
             <h2>💼 Otros Activos <span><button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveData('OTROS')">GUARDAR</button>` : ''}</span></h2>
             <div class="table-wrap"><table><thead><tr><th>Concepto</th><th style="text-align:right">Monto</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div>
