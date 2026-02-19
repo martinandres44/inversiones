@@ -11,11 +11,10 @@
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: #95a5a6; font-size: 11px; padding: 12px; text-transform: uppercase; cursor: pointer; background: #fdfdfd; }
-        th:hover { background: #f0f7ff; color: #3498db; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .pos { color: #27ae60; font-weight: bold; }
         .neg { color: #e74c3c; font-weight: bold; }
-        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
+        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; border-top: 2px solid #eee; padding-top: 10px; }
         .btn-edit { background: none; border: none; cursor: pointer; font-size: 14px; }
         .input-group { background: #ebf2f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; }
         input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
@@ -63,19 +62,19 @@
 
     <div class="card" style="border-left: 5px solid #2ecc71;">
         <h2>🇦🇷 Fondos Comunes (FCI)</h2>
-        <tbody id="fci-body"></tbody>
+        <table id="fci-table"><thead><tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align:right;">Subtotal</th></tr></thead><tbody id="fci-body"></tbody></table>
         <div class="section-total" id="sub-fci">Subtotal FCI: $ 0,00</div>
     </div>
 
     <div class="card" style="border-left: 5px solid #e67e22;">
         <h2>🏦 Mutual Funds - Martín</h2>
-        <tbody id="martin-body"></tbody>
+        <table id="martin-table"><thead><tr><th>Fondo</th><th>Cantidad</th><th>Precio</th><th style="text-align:right;">Subtotal</th></tr></thead><tbody id="martin-body"></tbody></table>
         <div class="section-total" id="sub-martin">Subtotal Internacional: $ 0,00</div>
     </div>
 
-    <div class="card" style="border-left: 5px solid #95a5a6;">
+    <div class="card" style="border-left: 5px solid #95a5a6; opacity: 0.8;">
         <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
-        <tbody id="jorge-body"></tbody>
+        <table id="jorge-table"><thead><tr><th>Fondo</th><th>Cantidad</th><th style="text-align:right;">Subtotal</th></tr></thead><tbody id="jorge-body"></tbody></table>
         <div class="section-total" id="sub-jorge">Subtotal Jorge: $ 0,00</div>
     </div>
 </div>
@@ -83,29 +82,14 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
     
-    // Listas fijas restauradas
-    const fciData = [
-        {n:"BAL.AHUSD.A", q:15229.046}, {n:"C.MIII.A", q:33099.893}, {n:"COM.BEST.IDEASA", q:36855.941},
-        {n:"IAM.RENDOL.A", q:15464.026}, {n:"MAF.MIXII.D", q:8778.378}, {n:"SCH.RT.A", q:18693.75},
-        {n:"Fima Renta B", q:92357.32}, {n:"Fima Renta A", q:1803.79}
-    ];
+    // Datos restaurados
+    const fciData = [{n:"BAL.AHUSD.A", q:15229.046}, {n:"C.MIII.A", q:33099.893}, {n:"COM.BEST.IDEASA", q:36855.941}, {n:"IAM.RENDOL.A", q:15464.026}, {n:"MAF.MIXII.D", q:8778.378}, {n:"SCH.RT.A", q:18693.75}, {n:"Fima Renta B", q:92357.32}, {n:"Fima Renta A", q:1803.79}];
+    const martinFunds = [{n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545}, {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654}, {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543}, {n:"Thornburg", q:1157.025}, {n:"Ab Sicav I", q:620.444}];
+    const jorgeFunds = [{n:"Fed. Hermes", q:3819.89}, {n:"Janus Henderson", q:5034.388}, {n:"Allianz Income", q:6315.422}, {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}];
 
-    const martinFunds = [
-        {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", q:2582.186}, {n:"Janus Henderson", q:1727.545},
-        {n:"Pimco Global", q:808.112}, {n:"Allianz Income", q:1421.231}, {n:"Franklin U.S.", q:357.654},
-        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543},
-        {n:"Thornburg", q:1157.025}, {n:"Ab Sicav I", q:620.444}
-    ];
-
-    const jorgeFunds = [
-        {n:"Fed. Hermes", q:3819.89}, {n:"Janus Henderson", q:5034.388}, {n:"Allianz Income", q:6315.422},
-        {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}
-    ];
-
-    let sheetPrices = {};
+    let sheetData = {};
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
-    let sortKey = 'tot';
-    let sortAsc = false;
+    let sortKey = 'tot', sortAsc = false;
 
     const fmt = (v) => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
@@ -113,12 +97,10 @@
         try {
             const res = await fetch(SCRIPT_URL);
             const data = await res.json();
-            data.slice(1).forEach(r => {
-                if(r[0]) sheetPrices[r[0].toString().toUpperCase()] = {q:r[1], p:r[2], dc:r[5], dcp:r[4]};
-            });
+            data.slice(1).forEach(r => { if(r[0]) sheetData[r[0].toString().toUpperCase()] = {q:r[1], p:r[2], dc:r[5], dcp:r[4]}; });
             document.getElementById('sync-info').innerText = "Sincronizado ✅";
             render();
-        } catch (e) { document.getElementById('sync-info').innerText = "Error de sincronización ❌"; }
+        } catch (e) { document.getElementById('sync-info').innerText = "Error de conexión ❌"; render(); }
     }
 
     async function manageStock(action, ticker = null) {
@@ -135,13 +117,13 @@
         setTimeout(fetchData, 1500);
     }
 
-    function setSort(key) { sortAsc = (sortKey === key) ? !sortAsc : false; sortKey = key; render(); }
+    function setSort(k) { sortAsc = (sortKey === k) ? !sortAsc : false; sortKey = k; render(); }
     function updateMargin(v) { margin = parseFloat(v); localStorage.setItem('userMargin', v); render(); }
 
     function render() {
         let totalS = 0, totalFCI = 0, totalM = 0, totalJ = 0;
-        let sList = Object.keys(sheetPrices).filter(k => !fcis_names().includes(k)).map(k => {
-            const d = sheetPrices[k]; return {t:k, q:d.q, p:d.p, dc:d.dc, dcp:d.dcp, tot:d.p*d.q};
+        let sList = Object.keys(sheetData).filter(k => !fciData.map(f=>f.n.toUpperCase()).includes(k)).map(k => {
+            const d = sheetData[k]; return {t:k, q:d.q, p:d.p, dc:d.dc, dcp:d.dcp, tot:d.p*d.q};
         });
         sList.sort((a,b) => (sortAsc ? 1 : -1) * (a[sortKey] > b[sortKey] ? 1 : -1));
 
@@ -149,39 +131,34 @@
             totalS += s.tot;
             return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()} <button class="btn-edit" onclick="manageStock('edit','${s.t}')">✏️</button></td>
                 <td>$ ${s.p.toFixed(2)}</td><td class="${s.dc>=0?'pos':'neg'}">$ ${fmt(s.dc)}</td>
-                <td class="${s.dcp>=0?'pos':'neg'}">${(s.dcp*100).toFixed(2)}%</td><td style="text-align:right; font-weight:bold;">$ ${fmt(s.tot)}</td>
+                <td class="${s.dcp>=0?'pos':'neg'}">${(s.dcp*100).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(s.tot)}</td>
                 <td><button onclick="manageStock('delete','${s.t}')" style="color:red; border:none; background:none; cursor:pointer;">×</button></td></tr>`;
         }).join('');
         document.getElementById('sub-stocks').innerText = `Net Liquidation: $ ${fmt(totalS + margin)}`;
 
-        // Render FCI
         document.getElementById('fci-body').innerHTML = fciData.map(f => {
-            const p = sheetPrices[f.n.toUpperCase()]?.p || 0; const sub = p*f.q; totalFCI += sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(4)}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+            const p = sheetData[f.n.toUpperCase()]?.p || 0; const sub = p*f.q; totalFCI += sub;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(4)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
 
-        // Render Martín
         document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
-            const p = sheetPrices[(f.c || f.n).toUpperCase()]?.p || 0; const sub = p*f.q; totalM += sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+            const p = sheetData[(f.c || f.n).toUpperCase()]?.p || 0; const sub = p*f.q; totalM += sub;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-martin').innerText = `Subtotal Internacional: $ ${fmt(totalM)}`;
 
-        // Render Jorge
         document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
-            const p = sheetPrices[f.n.toUpperCase()]?.p || 0; const sub = p*f.q; totalJ += sub;
-            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td style="text-align:right; font-weight:bold;">$ ${fmt(sub)}</td></tr>`;
+            const p = sheetData[f.n.toUpperCase()]?.p || 0; const sub = p*f.q; totalJ += sub;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>`;
         }).join('');
         document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $ ${fmt(totalJ)}`;
 
         document.getElementById('total-general').innerText = `$ ${fmt(totalS + margin + totalFCI + totalM)}`;
     }
 
-    function fcis_names() { return fciData.map(f => f.n.toUpperCase()); }
     document.getElementById('margin-input').value = margin;
     fetchData();
-    setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
