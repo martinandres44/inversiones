@@ -5,22 +5,20 @@
     <title>Inversiones Martín - Dashboard</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
+        .container { max-width: 1100px; margin: auto; }
         .header { background: #1a2a3a; color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; color: #2c3e50; }
-        .jorge-card { border-left: 5px solid #95a5a6; background: #fafafa; }
+        .fci-card { border-left: 5px solid #2ecc71; }
         .martin-card { border-left: 5px solid #e67e22; }
+        .jorge-card { border-left: 5px solid #95a5a6; background: #fafafa; opacity: 0.8; }
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; color: #95a5a6; font-size: 11px; padding: 10px; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 120px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: #3498db; color: white; }
-        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 10px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
         .subtotal { font-weight: bold; color: #27ae60; text-align: right; }
-        .section-total { text-align: right; font-weight: bold; font-size: 1.1em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
-        .loading { color: #f39c12; font-size: 0.8em; font-style: italic; }
+        .section-total { text-align: right; font-weight: bold; font-size: 1.2em; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; }
+        .margin-row { color: #e74c3c; font-weight: bold; }
+        .input-val { padding: 5px; border: 1px solid #ddd; border-radius: 4px; width: 120px; text-align: right; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -28,161 +26,152 @@
 <div class="container">
     <div class="header">
         <small>PATRIMONIO TOTAL CONSOLIDADO (MARTÍN)</small>
-        <h1 id="total-general">$0,00</h1>
+        <h1 id="total-general">$ 0,00</h1>
     </div>
 
     <div class="card">
-        <h2>📈 Acciones & Cripto</h2>
-        <div style="margin-bottom: 15px;">
-            <input type="text" id="tk-name" placeholder="Ticker (ej: AAPL)">
-            <input type="number" id="tk-qty" placeholder="Cantidad">
-            <button class="btn btn-add" onclick="addStock()">+ Agregar</button>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Activo</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th style="text-align: right;">Subtotal</th>
-                    <th></th>
-                </tr>
-            </thead>
+        <h2>📈 Acciones</h2>
+        <table id="stocks-table">
+            <thead><tr><th>Ticker</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="stocks-body"></tbody>
+            <tfoot>
+                <tr class="margin-row">
+                    <td colspan="3" style="text-align: right;">MARGEN (DEUDA):</td>
+                    <td style="text-align: right;">
+                        <input type="number" id="margin-input" value="-269051" onchange="updateMargin(this.value)" class="input-val">
+                    </td>
+                </tr>
+            </tfoot>
         </table>
-        <div class="section-total" id="sub-stocks">Subtotal Acciones: $0,00</div>
+        <div class="section-total" id="sub-stocks">Total Acciones Neto: $ 0,00</div>
+    </div>
+
+    <div class="card fci-card">
+        <h2>🇦🇷 Fondos Comunes (FCI)</h2>
+        <table>
+            <thead><tr><th>Fondo</th><th>Cantidad</th><th>NAV</th><th style="text-align: right;">Subtotal</th></tr></thead>
+            <tbody id="fci-body"></tbody>
+        </table>
+        <div class="section-total" id="sub-fci">Subtotal FCI: $ 0,00</div>
     </div>
 
     <div class="card martin-card">
         <h2>🏦 Mutual Funds - Martín</h2>
-        <table>
-            <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>Precio (NAV)</th><th style="text-align: right;">Subtotal</th></tr>
-            </thead>
+        <table id="martin-table">
+            <thead><tr><th>Fondo</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="martin-body"></tbody>
         </table>
-        <div class="section-total" id="sub-martin">Subtotal Martín: $0,00</div>
+        <div class="section-total" id="sub-martin">Subtotal Internacional: $ 0,00</div>
     </div>
 
     <div class="card jorge-card">
-        <h2>🏦 Mutual Funds - Jorge (Excluido del Total)</h2>
-        <table>
-            <thead>
-                <tr><th>Fondo</th><th>Cantidad</th><th>Precio (NAV)</th><th style="text-align: right;">Subtotal</th></tr>
-            </thead>
+        <h2>🏦 Mutual Funds - Jorge (Informativo)</h2>
+        <table id="jorge-table">
+            <thead><tr><th>Fondo</th><th>Cantidad</th><th>Precio</th><th style="text-align: right;">Subtotal</th></tr></thead>
             <tbody id="jorge-body"></tbody>
         </table>
-        <div class="section-total" id="sub-jorge">Subtotal Jorge: $0,00</div>
     </div>
 </div>
 
 <script>
-    // 1. Datos de Martín (Extraídos de image_f2da5b.png)
-    const martinFunds = [
-        {n:"Fed. Hermes", c:"FORS", q:4713.21, p:1.00},
-        {n:"Lord Abbett", c:"G5648E661", q:2582.186, p:12.57},
-        {n:"Janus Henderson", c:"G5S1BZ639", q:1727.545, p:20.80},
-        {n:"Pimco Global", c:"G70974491", q:808.112, p:32.15},
-        {n:"Thornburg Global", c:"G8T49N198", q:1157.025, p:36.41},
-        {n:"Allianz Income", c:"L016D6246", q:1421.231, p:17.6878},
-        {n:"Ab Sicav I", c:"L0173W230", q:620.444, p:68.29},
-        {n:"Franklin U.S. Opp", c:"L4058Y329", q:357.654, p:55.32},
-        {n:"Franklin Global Conv", c:"L40598481", q:2128.218, p:18.13},
-        {n:"MFS Meridian", c:"L6366X224", q:3353.097, p:14.69},
-        {n:"Morgan Stanley", c:"L65228550", q:131.543, p:149.63}
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTop-X-Mr1K8n1s0I7a0Dcby_vFO4QZK8DYN8MhMwEui1GuVz40cS7iL5wo80jT6BYcBaiH5m7HbQ2B/pub?gid=0&single=true&output=csv";
+
+    // Data estática de cantidades
+    const stocks = [
+        {t:'BLNK',q:800}, {t:'DNA',q:100}, {t:'LPSN',q:6}, {t:'NAK',q:1000}, {t:'OPEN',q:100}, {t:'SATL',q:500},
+        {t:'SOUN',q:200}, {t:'LPTH',q:100}, {t:'BBAI',q:300}, {t:'GRAB',q:200}, {t:'ONDS',q:150}, {t:'NIO',q:250},
+        {t:'EOSE',q:200}, {t:'ZETA',q:200}, {t:'RKLB',q:50}, {t:'BABA',q:20}, {t:'MSTR',q:30}, {t:'CIFR',q:300},
+        {t:'JOBY',q:550}, {t:'HIMS',q:300}, {t:'CRWV',q:50}, {t:'TMDX',q:40}, {t:'SHOP',q:45}, {t:'AVGO',q:20}, {t:'NU',q:400},
+        {t:'ARKK',q:110}, {t:'SE',q:75}, {t:'SOFI',q:500}, {t:'UPST',q:500}, {t:'IREN',q:450}, {t:'LMND',q:300},
+        {t:'MELI',q:8}, {t:'AFRM',q:375}, {t:'MU',q:47}, {t:'TSLA',q:60}, {t:'AMD',q:125}, {t:'ASTS',q:500},
+        {t:'KO',q:397.333}, {t:'NVDA',q:250.092}, {t:'PLTR',q:450}
     ];
 
-    // 2. Datos de Jorge (Extraídos de image_f2780b.png y image_f278a3.png)
-    const jorgeFunds = [
-        {n:"Federated Hermes", c:"FORS", q:3819.89, p:1.00},
-        {n:"Janus Henderson", c:"G5S1BZ639", q:5034.388, p:20.80},
-        {n:"Allianz Income", c:"L016D6246", q:6315.422, p:17.68},
-        {n:"Franklin Global", c:"L40598481", q:7418.468, p:18.13},
-        {n:"MFS Meridian", c:"L6366X224", q:9179.767, p:14.69},
-        {n:"Morgan Stanley", c:"L65228550", q:267.019, p:149.63}
+    const fcis = [
+        {n:"BAL.AHUSD.A", q:15229.046}, {n:"C.MIII.A", q:33099.893}, {n:"COM.BEST.IDEASA", q:36855.941},
+        {n:"IAM.RENDOL.A", q:15464.026}, {n:"MAF.MIXII.D", q:8778.378}, {n:"SCH.RT.A", q:18693.75},
+        {n:"Fima Renta Fija Dolares B", q:92357.32}, {n:"Fima Renta Fija Dolares A", q:1803.79}
     ];
 
-    let myStocks = JSON.parse(localStorage.getItem('myStocks')) || [
-        {ticker:'ASTS', qty:100}, {ticker:'IREN', qty:50}, {ticker:'PLTR', qty:30},
-        {ticker:'LMND', qty:300}, {ticker:'AFRM', qty:375}
+    const martinInt = [
+        {n:"Fed. Hermes", c:"FORS", q:4713.21}, {n:"Lord Abbett", c:"G5648E661", q:2582.186},
+        {n:"Janus Henderson", q:1727.545}, {n:"Pimco Global", q:808.112}, {n:"Thornburg", q:1157.025},
+        {n:"Allianz Income", q:1421.231}, {n:"Ab Sicav I", q:620.444}, {n:"Franklin U.S.", q:357.654},
+        {n:"Franklin Conv.", q:2128.218}, {n:"MFS Meridian", q:3353.097}, {n:"Morgan Stanley", q:131.543}
     ];
-    let stockPrices = {};
+
+    const jorgeInt = [
+        {n:"Federated Hermes", q:3819.89}, {n:"Janus Henderson", q:5034.388}, {n:"Allianz Income", q:6315.422},
+        {n:"Franklin Global", q:7418.468}, {n:"MFS Meridian", q:9179.767}, {n:"Morgan Stanley", q:267.019}
+    ];
+
+    let prices = {};
+    let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
+    document.getElementById('margin-input').value = margin;
 
     const fmt = (v) => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-    async function fetchPrices() {
-        for (let s of myStocks) {
-            try {
-                // Cambiamos el proxy para intentar forzar la carga
-                const proxy = "https://api.allorigins.win/get?url=";
-                const target = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${s.ticker}`);
-                const res = await fetch(proxy + target + "&dt=" + Date.now());
-                const json = await res.json();
-                const data = JSON.parse(json.contents);
-                stockPrices[s.ticker] = data.chart.result[0].meta.regularMarketPrice;
-            } catch (e) { 
-                stockPrices[s.ticker] = stockPrices[s.ticker] || 0; 
-            }
-            render(); 
-        }
+    async function fetchData() {
+        try {
+            const response = await fetch(CSV_URL);
+            const text = await response.text();
+            const rows = text.split('\n');
+            rows.forEach(row => {
+                const cols = row.split(',');
+                if (cols[0] && cols[1]) {
+                    prices[cols[0].trim().toUpperCase()] = parseFloat(cols[1]) || 0;
+                }
+            });
+            render();
+        } catch (e) { console.error("Error al leer el CSV"); }
     }
 
-    function addStock() {
-        const t = document.getElementById('tk-name').value.toUpperCase().trim();
-        const q = parseFloat(document.getElementById('tk-qty').value);
-        if(t && q) {
-            myStocks.push({ticker:t, qty:q});
-            localStorage.setItem('myStocks', JSON.stringify(myStocks));
-            fetchPrices();
-        }
-    }
-
-    function removeStock(i) {
-        myStocks.splice(i, 1);
-        localStorage.setItem('myStocks', JSON.stringify(myStocks));
+    function updateMargin(val) {
+        margin = parseFloat(val) || 0;
+        localStorage.setItem('userMargin', margin);
         render();
     }
 
     function render() {
-        let totalS = 0, totalM = 0, totalJ = 0;
+        let totalS = 0, totalFCI = 0, totalM = 0;
 
         // ACCIONES
-        document.getElementById('stocks-body').innerHTML = myStocks.map((s, i) => {
-            const p = stockPrices[s.ticker] || 0;
-            const sub = p * s.qty;
-            totalS += sub;
-            return `<tr>
-                <td><b>${s.ticker}</b></td>
-                <td>${s.qty}</td>
-                <td>${p ? '$'+p.toFixed(2) : '<span class="loading">Buscando...</span>'}</td>
-                <td class="subtotal">$${fmt(sub)}</td>
-                <td><button class="btn btn-del" onclick="removeStock(${i})">x</button></td>
-            </tr>`;
+        document.getElementById('stocks-body').innerHTML = stocks.map(s => {
+            const p = prices[s.t] || 0;
+            totalS += (p * s.q);
+            return `<tr><td><b>${s.t}</b></td><td>${s.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td class="subtotal">$ ${fmt(p*s.q)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-stocks').innerText = `Subtotal Acciones: $${fmt(totalS)}`;
+        const stockNet = totalS + margin;
+        document.getElementById('sub-stocks').innerText = `Total Acciones Neto: $ ${fmt(stockNet)}`;
+
+        // FCI
+        document.getElementById('fci-body').innerHTML = fcis.map(f => {
+            const p = prices[f.n.toUpperCase()] || 0;
+            totalFCI += (p * f.q);
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(4)}</td><td class="subtotal">$ ${fmt(p*f.q)}</td></tr>`;
+        }).join('');
+        document.getElementById('sub-fci').innerText = `Subtotal FCI: $ ${fmt(totalFCI)}`;
 
         // MARTÍN
-        document.getElementById('martin-body').innerHTML = martinFunds.map(f => {
-            const sub = f.p * f.q;
-            totalM += sub;
-            return `<tr><td>${f.n}<br><small>${f.c}</small></td><td>${f.q.toLocaleString('es-AR')}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
+        document.getElementById('martin-body').innerHTML = martinInt.map(f => {
+            const key = (f.c || f.n).toUpperCase();
+            const p = prices[key] || 0;
+            totalM += (p * f.q);
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td class="subtotal">$ ${fmt(p*f.q)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-martin').innerText = `Subtotal Martín: $${fmt(totalM)}`;
+        document.getElementById('sub-martin').innerText = `Subtotal Internacional: $ ${fmt(totalM)}`;
 
         // JORGE
-        document.getElementById('jorge-body').innerHTML = jorgeFunds.map(f => {
-            const sub = f.p * f.q;
-            totalJ += sub;
-            return `<tr><td>${f.n}<br><small>${f.c}</small></td><td>${f.q.toLocaleString('es-AR')}</td><td>$${f.p.toFixed(2)}</td><td class="subtotal">$${fmt(sub)}</td></tr>`;
+        document.getElementById('jorge-body').innerHTML = jorgeInt.map(f => {
+            const p = prices[f.n.toUpperCase()] || 0;
+            return `<tr><td>${f.n}</td><td>${f.q.toLocaleString()}</td><td>$ ${p.toFixed(2)}</td><td class="subtotal">$ ${fmt(p*f.q)}</td></tr>`;
         }).join('');
-        document.getElementById('sub-jorge').innerText = `Subtotal Jorge: $${fmt(totalJ)}`;
 
-        // TOTAL GENERAL (SOLO ACCIONES + MARTÍN)
-        document.getElementById('total-general').innerText = `$${fmt(totalS + totalM)}`;
+        document.getElementById('total-general').innerText = `$ ${fmt(stockNet + totalFCI + totalM)}`;
     }
 
-    render();
-    fetchPrices();
+    fetchData();
+    setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
