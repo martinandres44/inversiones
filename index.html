@@ -84,7 +84,7 @@
             overflow: hidden;
             box-shadow: var(--shadow);
         }
-        .card-header {
+        h2 {
             padding: 14px var(--cp);
             margin: 0;
             font-size: 1.25rem;
@@ -94,23 +94,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer;
-            user-select: none;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .card-header .toggle {
-            font-size: 1.4rem;
-            transition: transform 0.3s;
-        }
-        .card.collapsed .toggle { transform: rotate(180deg); }
-        .card.collapsed .card-body { display: none; }
-        .card.collapsed .summary {
-            display: block;
-            padding: 0 16px 12px;
-            font-size: 0.95rem;
-            color: var(--text-light);
-        }
-        .summary { display: none; }
-        .card-body { padding: 0; }
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; }
         th, td {
@@ -159,7 +146,7 @@
         .btn-save { background: var(--a); color: white; }
         .btn-add { background: var(--s); color: white; }
 
-        /* RESPONSIVE MÓVIL */
+        /* RESPONSIVE MÓVIL - TARJETAS SIMPLES Y VISIBLES */
         @media (max-width: 768px) {
             body { font-size: 15px; padding: 10px; }
             .header { padding: 24px 14px; }
@@ -326,11 +313,6 @@
         render();
     }
 
-    function toggleSection(id) {
-        const card = document.getElementById(id);
-        card.classList.toggle('collapsed');
-    }
-
     function render() {
         let globalTotal = 0, globalDC = 0;
         let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
@@ -367,20 +349,10 @@
                     <td style="text-align:right;">$ ${fmt(i.sub)} ${canDelete ? `<button class="btn-del" onclick="delRow('${type}', ${index})">×</button>` : ''}</td>
                 </tr>`;
             }).join('');
-            const net = sSub + margin;
+            const net = sSub + margin;  // Valor neto de Acciones
             globalTotal += net; globalDC += sDc;
-            const summary = `Subtotal: $ ${fmt(net)} | Día: <span class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)} (${((sDc / (net - sDc || 1)) * 100).toFixed(2)}%)</span>`;
-            containerHtml += `
-            <div class="card" id="acciones">
-                <div class="card-header" onclick="toggleSection('acciones')">
-                    📈 Acciones
-                    <span class="toggle">▼</span>
-                </div>
-                <div class="summary">${summary}</div>
-                <div class="card-body">
-                    ${createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true)}
-                </div>
-            </div>`;
+            const pctDiaAcciones = (net !== 0) ? (sDc / net * 100) : 0;  // CORRECCIÓN: % sobre neto (subtotal + margen)
+            containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true, pctDiaAcciones);
         }
 
         if (cats.FCI.length > 0) {
@@ -396,18 +368,7 @@
             };
             let rowsFci = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
             globalTotal += tSub; globalDC += tDc;
-            const summary = `Subtotal: $ ${fmt(tSub)} | Día: <span class="${tDc>=0?'pos':'neg'}">$ ${fmt(tDc)} (${((tDc / (tSub - tDc || 1)) * 100).toFixed(2)}%)</span>`;
-            containerHtml += `
-            <div class="card" id="fci">
-                <div class="card-header" onclick="toggleSection('fci')">
-                    🇦🇷 Fondos Argentina
-                    <span class="toggle">▼</span>
-                </div>
-                <div class="summary">${summary}</div>
-                <div class="card-body">
-                    ${createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub)}
-                </div>
-            </div>`;
+            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub);
         }
 
         [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(c => {
@@ -415,18 +376,7 @@
             let sub = 0, dc = 0;
             let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             if (c[0] !== "JORGE") { globalTotal += sub; globalDC += dc; }
-            const summary = `Subtotal: $ ${fmt(sub)} | Día: <span class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)} (${((dc / (sub - dc || 1)) * 100).toFixed(2)}%)</span>`;
-            containerHtml += `
-            <div class="card" id="${c[0].toLowerCase()}">
-                <div class="card-header" onclick="toggleSection('${c[0].toLowerCase()}')">
-                    ${c[1]}
-                    <span class="toggle">▼</span>
-                </div>
-                <div class="summary">${summary}</div>
-                <div class="card-body">
-                    ${createCard(c[1], c[2], rows, dc, sub, sub)}
-                </div>
-            </div>`;
+            containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
         });
 
         let otrosData = db.otros.map((item, i) => ({
@@ -469,30 +419,7 @@
         }).join('');
 
         globalTotal += oSub;
-        const summaryOtros = `Subtotal: $ ${fmt(oSub)}`;
-        containerHtml += `
-        <div class="card" id="otros">
-            <div class="card-header" onclick="toggleSection('otros')">
-                💼 Otros Activos
-                <span class="toggle">▼</span>
-            </div>
-            <div class="summary">${summaryOtros}</div>
-            <div class="card-body">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th onclick="setOtrosSort('nombre')">Concepto ↕</th>
-                                <th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th>
-                                <th class="${editModes.Otros?'':'hidden'}"></th>
-                            </tr>
-                        </thead>
-                        <tbody>${oRows}</tbody>
-                    </table>
-                </div>
-                <div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div>
-            </div>
-        </div>`;
+        containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos <span>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveOtros()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button></span></h2><div class="table-wrap"><table><thead><tr><th onclick="setOtrosSort('nombre')">Concepto ↕</th><th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div><div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div></div>`;
 
         document.getElementById('cards-container').innerHTML = containerHtml;
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
@@ -501,8 +428,9 @@
     }
 
     function createCard(title, color, rows, dc, sub, net, isStocks=false) {
-        const pct = (sub - dc !== 0) ? (dc / (sub - dc) * 100) : 0;
-        return `
+        const pct = (net !== 0) ? (dc / net * 100) : 0;  // CORRECCIÓN: % día sobre neto para Acciones
+        return `<div class="card" style="border-top-color: ${color}">
+            <h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveStocks()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -521,7 +449,7 @@
                             <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
                             <td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td>
                             <td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
-                            <td style="text-align:right;">$ ${fmt(sub)}</td>
+                            <td style="text-align:right;">$ ${fmt(net)}</td>
                         </tr>
                         ${isStocks ? `<tr style="background:rgba(239,68,68,0.08);">
                             <td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td>
@@ -532,7 +460,8 @@
                     </tfoot>
                 </table>
             </div>
-            <div class="section-total">Subtotal: $ ${fmt(net)}</div>`;
+            <div class="section-total">Subtotal: $ ${fmt(net)}</div>
+        </div>`;
     }
 
     fetchData();
