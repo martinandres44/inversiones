@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Patrimonio v29.0</title>
+    <title>Dashboard Martín v31.0</title>
     <style>
         :root { --p: #1a2a3a; --a: #3498db; --s: #27ae60; --d: #e74c3c; --bg: #f0f2f5; --m: #e67e22; --j: #95a5a6; --o: #34495e; --cp: 20px; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
         .container { max-width: 1300px; margin: auto; padding-bottom: 50px; }
         .header { background: var(--p); color: white; padding: 30px 15px; border-radius: 15px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         #total-general { font-size: 2.5rem; margin: 5px 0; font-weight: bold; }
-        .header-dc { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+        .header-dc { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
         .card { background: white; padding: var(--cp) 0 0 0; border-radius: 12px; margin-bottom: 25px; border-top: 5px solid transparent; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h2 { padding: 0 var(--cp) 12px var(--cp); margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-wrap { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #fdfdfd; color: #8898aa; font-size: 10px; padding: 12px 15px; text-transform: uppercase; cursor: pointer; text-align: left; }
         td { padding: 14px 15px; border-bottom: 1px solid #f9f9f9; font-size: 13px; white-space: nowrap; }
@@ -23,17 +23,16 @@
         .section-total { text-align: right; font-weight: bold; padding: 18px var(--cp); background: #fff; border-top: 1px solid #eee; }
         input.edit-in { border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; font-size: 13px; width: 85%; background: #fff; }
         .btn-tool { background: none; border: none; cursor: pointer; font-size: 18px; opacity: 0.6; }
-        .btn-tool:hover { opacity: 1; }
         .btn-save { background: var(--a); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--s); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 10px; }
-        .btn-del { color: var(--d); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-left: 5px; }
+        .btn-del { color: var(--d); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <small>PATRIMONIO CONSOLIDADO</small>
+        <small>PATRIMONIO CONSOLIDADO MARTÍN</small>
         <div id="total-general">$ 0,00</div>
         <div id="header-dc" class="header-dc">--</div>
         <div id="sync-info" style="font-size: 11px; opacity: 0.6;">Sincronizando...</div>
@@ -46,7 +45,8 @@
     let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
     let db = { main: [], otros: [], extra: [] };
     let editModes = { STOCKS: false, Otros: false };
-    let sortConfig = { key: 'sub', asc: false };
+    let currentStocks = []; 
+
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     async function fetchData() {
@@ -56,6 +56,11 @@
             if (db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
+            // Combinar todo lo de Stocks en una lista única para editar
+            currentStocks = [
+                ...db.main.filter(r => r[6] === "STOCKS").map(r => ({n:r[0], q:r[1], p:r[2], dc_v:r[5], dc_p:r[4]})),
+                ...db.extra.map(r => ({n:r[0], q:r[1], p:r[2], dc_v:r[3], dc_p:r[4]}))
+            ];
             render();
             document.getElementById('sync-info').innerText = "Sincronizado ✅";
         } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
@@ -63,118 +68,94 @@
 
     async function saveData(type) {
         document.getElementById('sync-info').innerText = "Guardando...";
-        const data = type === 'OTROS' ? db.otros.map(i => ({n:i[0], v:i[1]})) : db.extra.map(i => ({n:i[0], q:i[1], p:i[2], dc_v:i[3], dc_p:i[4]}));
-        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type, data }) });
+        const data = type === 'OTROS' ? db.otros.map(i => ({n:i[0], v:i[1]})) : currentStocks;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: type === 'OTROS' ? 'OTROS' : 'EXTRA', data }) });
         editModes[type === 'OTROS' ? 'Otros' : 'STOCKS'] = false;
         fetchData();
     }
 
     function toggleEdit(sec) { editModes[sec] = !editModes[sec]; render(); }
-    
-    function updateVal(type, i, col, val) { 
-        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0); 
-    }
+    function updateStock(i, f, v) { currentStocks[i][f] = (f === 'n' ? v : parseFloat(v) || 0); }
+    function updateOtros(i, f, v) { db.otros[i][f] = (f === 1 ? parseFloat(v) || 0 : v); }
 
     function addRow(type) {
         if(type === 'OTROS') db.otros.push(["Nuevo", 0]);
-        else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
+        else currentStocks.push({n: "NUEVA", q: 0, p: 0, dc_v: 0, dc_p: 0});
         render();
     }
 
-    function delRow(type, i) { 
-        if(confirm('¿Eliminar?')) { db[type.toLowerCase()].splice(i, 1); render(); } 
+    function delRow(type, i) {
+        if(confirm('¿Eliminar línea?')) {
+            if(type === 'OTROS') db.otros.splice(i, 1);
+            else currentStocks.splice(i, 1);
+            render();
+        }
     }
 
     function render() {
         let globalTotal = 0, globalDC = 0;
-        let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
+        let cats = { FCI:[], MARTIN:[], JORGE:[] };
 
-        // 1. Datos Sheets
-        db.main.forEach(r => {
-            const cat = (r[6] || "").toUpperCase().trim();
+        // 1. STOCKS (Edición total habilitada)
+        let sSub = 0, sDc = 0;
+        let stocksRows = currentStocks.map((i, idx) => {
+            let sub = i.q * i.p; sSub += sub; sDc += i.dc_v;
+            return `<tr>
+                <td>${editModes.STOCKS ? `<input class="edit-in" value="${i.n}" onchange="updateStock(${idx},'n',this.value)">` : `<b>${i.n}</b>`}</td>
+                <td>${editModes.STOCKS ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateStock(${idx},'q',this.value)">` : i.q.toLocaleString()}</td>
+                <td>$ ${fmt(i.p)}</td>
+                <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
+                <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
+                <td style="text-align:right;">$ ${fmt(sub)} ${editModes.STOCKS ? `<button class="btn-del" onclick="delRow('STOCKS',${idx})">×</button>` : ''}</td>
+            </tr>`;
+        }).join('');
+        globalTotal += (sSub + margin); globalDC += sDc;
+
+        // 2. Otros del Excel
+        db.main.filter(r => r[6] !== "STOCKS").forEach(r => {
+            const cat = r[6].toUpperCase().trim();
             if (!cats[cat]) return;
-            const q = parseFloat(r[1])||0, p = parseFloat(r[2])||0, dc_v = parseFloat(r[5])||0, dc_p = parseFloat(r[4])||0;
-            const isFCI = (cat === "FCI");
-            cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v: isFCI ? dc_v/1000 : dc_v, dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, sub: isFCI?(p*q)/1000:(p*q), isManual: false });
+            const q = parseFloat(r[1])||0, p = parseFloat(r[2])||0, isFCI = (cat === "FCI");
+            const sub = isFCI ? (p * q) / 1000 : (p * q);
+            const dc_v = isFCI ? (parseFloat(r[5])||0) / 1000 : (parseFloat(r[5])||0);
+            cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v, dc_p: parseFloat(r[4])||0, sub });
         });
 
-        // 2. Acciones Manuales
-        db.extra.forEach((r, idx) => {
-            cats.STOCKS.push({ n: r[0], q: parseFloat(r[1])||0, p: parseFloat(r[2])||0, dc_v: parseFloat(r[3])||0, dc_p: parseFloat(r[4])||0, sub: (r[1]*r[2]), isManual: true, idx: idx });
-        });
+        let containerHtml = createCardHtml("📈 Acciones", "var(--a)", stocksRows, sDc, sSub, sSub + margin, true, 'STOCKS');
 
-        let containerHtml = "";
-
-        // --- ACCIONES ---
-        if (cats.STOCKS.length > 0) {
-            cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let sSub = 0, sDc = 0;
-            let rowsHtml = cats.STOCKS.map(i => {
-                sSub += i.sub; sDc += i.dc_v;
-                const isEd = i.isManual && editModes.STOCKS;
-                return `<tr>
-                    <td>${isEd ? `<input class="edit-in" value="${i.n}" onchange="updateVal('EXTRA',${i.idx},0,this.value)">` : `<b>${i.n}</b>`}</td>
-                    <td>${isEd ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateVal('EXTRA',${i.idx},1,this.value)">` : i.q.toLocaleString()}</td>
-                    <td>$ ${i.p.toFixed(2)}</td>
-                    <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
-                    <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
-                    <td style="text-align:right;">$ ${fmt(i.sub)} ${isEd ? `<button class="btn-del" onclick="delRow('EXTRA',${i.idx})">×</button>` : ''}</td>
-                </tr>`;
-            }).join('');
-            const net = sSub + margin;
-            globalTotal += net; globalDC += sDc;
-            containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true);
-        }
-
-        // --- FCI (STYLING LIMPIO) ---
+        // --- FCI ---
         if (cats.FCI.length > 0) {
-            cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
-            let g2 = cats.FCI.filter(f => f.n.toUpperCase().includes("GALICIA"));
             let tSub = 0, tDc = 0;
-            const processGroup = (list, label) => {
+            const g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
+            const g2 = cats.FCI.filter(f => f.n.toUpperCase().includes("GALICIA"));
+            const process = (list, label) => {
                 let lSub = 0, lDc = 0;
                 let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(6)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
                 tSub += lSub; tDc += lDc;
                 return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lDc>=0?'pos':'neg'}">$ ${fmt(lDc)}</td><td class="${lDc>=0?'pos':'neg'}">${(lSub-lDc!==0?lDc/(lSub-lDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lSub)}</td></tr>`;
             };
-            let rowsFci = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
             globalTotal += tSub; globalDC += tDc;
-            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub);
+            containerHtml += createCardHtml("🇦🇷 Fondos Argentina", "var(--s)", process(g1, "OTROS") + process(g2, "GALICIA"), tDc, tSub, tSub);
         }
 
-        // --- MARTIN ---
-        if (cats.MARTIN.length > 0) {
-            let mSub = 0, mDc = 0;
-            let rowsM = cats.MARTIN.map(i => { mSub += i.sub; mDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            globalTotal += mSub; globalDC += mDc;
-            containerHtml += createCard("🏦 Mutual Funds - Martín", "var(--m)", rowsM, mDc, mSub, mSub);
-        }
-
-        // --- JORGE ---
-        if (cats.JORGE.length > 0) {
-            let jSub = 0, jDc = 0;
-            let rowsJ = cats.JORGE.map(i => { jSub += i.sub; jDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${jDc.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            containerHtml += createCard("🏦 Mutual Funds - Jorge (Info)", "var(--j)", rowsJ, jDc, jSub, jSub);
-        }
-
-        // --- SECCIÓN OTROS (EL CAMBIO SOLICITADO ESTÁ AQUÍ) ---
-        let oSub = 0;
-        
-        // ORDENAMIENTO NUMÉRICO DESCENDENTE EXPLÍCITO
-        db.otros.sort((a, b) => {
-            let valA = parseFloat(a[1]) || 0;
-            let valB = parseFloat(b[1]) || 0;
-            return valB - valA;
+        // --- MARTIN Y JORGE ---
+        [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(conf => {
+            const list = cats[conf[0]]; if (!list || list.length === 0) return;
+            let lSub = 0, lDc = 0;
+            let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${fmt(i.p)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            if (conf[0] !== "JORGE") { globalTotal += lSub; globalDC += lDc; }
+            containerHtml += createCardHtml(conf[1], conf[2], h, lDc, lSub, lSub);
         });
-        
+
+        // --- OTROS (SORT POR MONTO REVISADO) ---
+        db.otros.sort((a, b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0));
+        let oSub = 0;
         let oRows = db.otros.map((item, i) => {
             oSub += parseFloat(item[1]) || 0;
-            const isEd = editModes.Otros;
             return `<tr>
-                <td>${isEd ? `<input class="edit-in" value="${item[0]}" onchange="updateVal('OTROS',${i},0,this.value)">` : `<b>${item[0]}</b>`}</td>
-                <td style="text-align:right;">${isEd ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateVal('OTROS',${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td>
-                <td class="${isEd?'':'hidden'}"><button class="btn-del" onclick="delRow('OTROS',${i})">×</button></td>
+                <td>${editModes.Otros ? `<input class="edit-in" value="${item[0]}" onchange="updateOtros(${i},0,this.value)">` : `<b>${item[0]}</b>`}</td>
+                <td style="text-align:right;">${editModes.Otros ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateOtros(${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td>
+                <td class="${editModes.Otros?'':'hidden'}"><button class="btn-del" onclick="delRow('OTROS',i)">×</button></td>
             </tr>`;
         }).join('');
         globalTotal += oSub;
@@ -186,12 +167,11 @@
         document.getElementById('header-dc').innerHTML = `<span class="${globalDC>=0?'pos':'neg'}">$ ${fmt(globalDC)} (${gPct.toFixed(2)}%)</span>`;
     }
 
-    function createCard(title, color, rows, dc, sub, net, isStocks=false) {
+    function createCardHtml(title, color, rows, dc, sub, net, isStocks=false, editKey='') {
         const pct = (sub - dc !== 0) ? (dc / (sub - dc) * 100) : 0;
-        return `<div class="card" style="border-top-color: ${color}"><h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2><div class="table-wrap"><table><thead><tr><th onclick="setSort('n')">Activo ↕</th><th onclick="setSort('q')">Cant ↕</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right" onclick="setSort('sub')">Total ↕</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>${isStocks ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="edit-in" style="width:100px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();"></td></tr>` : ''}</tfoot></table></div><div class="section-total">Subtotal: $ ${fmt(net)}</div></div>`;
+        return `<div class="card" style="border-top-color: ${color}"><h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('STOCKS')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2><div class="table-wrap"><table><thead><tr><th>Activo</th><th>Cant.</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>${isStocks ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="edit-in" style="width:100px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();"></td></tr>` : ''}</tfoot></table></div><div class="section-total">Subtotal: $ ${fmt(net)}</div></div>`;
     }
 
-    function setSort(k) { sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false; sortConfig.key = k; render(); }
     fetchData(); setInterval(fetchData, 60000);
 </script>
 </body>
