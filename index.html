@@ -4,103 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard Patrimonio v33.0</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;Patrimonio Martín&quot;,
+        &quot;short_name&quot;: &quot;Patrimonio&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#0f172a&quot;,
+        &quot;theme_color&quot;: &quot;#3b82f6&quot;,
+        &quot;icons&quot;: [
+            {
+                &quot;src&quot;: &quot;https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg&quot;,
+                &quot;sizes&quot;: &quot;192x192&quot;,
+                &quot;type&quot;: &quot;image/jpeg&quot;,
+                &quot;purpose&quot;: &quot;any maskable&quot;
+            },
+            {
+                &quot;src&quot;: &quot;https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg&quot;,
+                &quot;sizes&quot;: &quot;512x512&quot;,
+                &quot;type&quot;: &quot;image/jpeg&quot;,
+                &quot;purpose&quot;: &quot;any maskable&quot;
+            }
+        ]
+    }">
+
+    <!-- iOS / Apple specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Patrimonio Martín">
+    <link rel="apple-touch-icon" href="https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg">
+
     <style>
         :root {
-            --p: #0f172a;           /* fondo oscuro principal */
+            --p: #0f172a;
             --p-light: #1e293b;
-            --a: #3b82f6;           /* azul vibrante (acciones) */
-            --s: #10b981;           /* verde esmeralda (FCI) */
-            --d: #ef4444;           /* rojo alerta */
-            --m: #f59e0b;           /* ámbar (Martín) */
-            --j: #6b7280;           /* gris suave (Jorge) */
-            --o: #475569;           /* gris azulado (Otros) */
-            --bg: #0f172a;          /* fondo general oscuro */
+            --a: #3b82f6;
+            --s: #10b981;
+            --d: #ef4444;
+            --m: #f59e0b;
+            --j: #6b7280;
+            --o: #475569;
+            --bg: #0f172a;
             --card-bg: #1e293b;
             --text: #e2e8f0;
             --text-light: #94a3b8;
             --border: #334155;
-            --cp: 20px;
-            --radius: 16px;
-            --shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-            --shadow-hover: 0 20px 35px -10px rgba(0,0,0,0.5);
+            --cp: 16px;
+            --radius: 14px;
+            --shadow: 0 8px 20px -4px rgba(0,0,0,0.4);
+            --shadow-hover: 0 16px 30px -8px rgba(0,0,0,0.5);
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 16px;
-            line-height: 1.5;
+            padding: 12px;
+            line-height: 1.45;
+            font-size: 15px;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
-            padding-bottom: 60px;
+            padding-bottom: 40px;
         }
 
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
-            padding: 40px 20px;
+            padding: 32px 16px;
             border-radius: var(--radius);
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
             box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         }
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 20%, rgba(59,130,246,0.12) 0%, transparent 50%);
-            pointer-events: none;
-        }
-
         #total-general {
-            font-size: 3.2rem;
+            font-size: clamp(2.2rem, 8vw, 3.2rem);
             font-weight: 800;
-            margin: 12px 0 8px;
-            letter-spacing: -1px;
+            margin: 8px 0 6px;
         }
 
         .header-dc {
-            font-size: 1.4rem;
-            font-weight: 600;
+            font-size: 1.25rem;
             opacity: 0.9;
         }
 
         #sync-info {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.7;
-            margin-top: 12px;
+            margin-top: 10px;
         }
 
         .card {
             background: var(--card-bg);
             border-radius: var(--radius);
-            margin-bottom: 32px;
+            margin-bottom: 24px;
             border-top: 5px solid transparent;
             overflow: hidden;
             box-shadow: var(--shadow);
-            transition: all 0.25s ease;
+            transition: transform 0.2s ease;
         }
 
         .card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
         }
 
         h2 {
-            padding: 16px var(--cp);
+            padding: 14px var(--cp);
             margin: 0;
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: white;
             background: linear-gradient(to right, rgba(30,41,59,0.6), rgba(15,23,42,0.8));
@@ -108,6 +127,8 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .table-wrap {
@@ -118,26 +139,30 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
         }
 
         th {
             background: rgba(30,41,59,0.6);
             color: #cbd5e1;
-            font-size: 0.78rem;
-            padding: 14px 16px;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             cursor: pointer;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
         }
 
         td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
             color: var(--text);
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .pos { color: #34d399; font-weight: 600; }
@@ -150,10 +175,10 @@
         }
 
         .section-total {
-            padding: 20px var(--cp);
+            padding: 16px var(--cp);
             text-align: right;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             background: rgba(15,23,42,0.4);
             border-top: 1px solid var(--border);
         }
@@ -162,76 +187,47 @@
             background: #1e293b;
             border: 1px solid #475569;
             color: white;
-            padding: 8px 12px;
+            padding: 7px 10px;
             border-radius: 8px;
-            font-size: 0.95rem;
-            width: 92%;
-            transition: all 0.2s;
+            font-size: 0.92rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         input.edit-in:focus {
-            outline: none;
             border-color: #60a5fa;
             box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+            outline: none;
         }
 
-        .btn-tool {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 1.4rem;
-            cursor: pointer;
+        .btn-tool, .btn-save, .btn-add, .btn-del {
+            font-size: 1.3rem;
             padding: 4px 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-tool:hover { color: white; transform: scale(1.15); }
-
-        .btn-save {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-left: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-save:hover { background: #2563eb; transform: translateY(-1px); }
-
-        .btn-add {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-add:hover { background: #059669; transform: translateY(-1px); }
-
-        .btn-del {
-            color: #f87171;
+            transition: all 0.18s;
             background: none;
             border: none;
-            font-size: 1.4rem;
             cursor: pointer;
-            padding: 0 8px;
-            transition: all 0.2s;
         }
 
-        .btn-del:hover { color: #ef4444; transform: scale(1.3); }
+        .btn-save, .btn-add {
+            font-size: 0.88rem;
+            padding: 7px 14px;
+            border-radius: 8px;
+        }
 
-        .hidden { display: none; }
+        .btn-save { background: var(--a); color: white; }
+        .btn-add  { background: var(--s); color: white; }
 
-        tr.editable td { background: rgba(59,130,246,0.08) !important; }
-        tr.editable td:first-child { background: rgba(59,130,246,0.12) !important; }
+        @media (max-width: 768px) {
+            body { font-size: 14px; padding: 10px; }
+            .header { padding: 24px 14px; }
+            #total-general { font-size: 2.2rem; }
+            h2 { font-size: 1.15rem; padding: 12px var(--cp); flex-direction: column; align-items: flex-start; gap: 8px; }
+            th, td { padding: 8px 10px; font-size: 0.88rem; }
+            td:nth-child(3), td:nth-child(5) { font-size: 0.85rem; padding: 8px 6px; }
+            .btn-add, .btn-save { padding: 6px 12px; font-size: 0.85rem; }
+            .btn-tool, .btn-del { font-size: 1.2rem; }
+        }
     </style>
 </head>
 <body>
@@ -240,7 +236,7 @@
         <small>PATRIMONIO CONSOLIDADO MARTÍN</small>
         <div id="total-general">$ 0,00</div>
         <div id="header-dc" class="header-dc">--</div>
-        <div id="sync-info" style="font-size: 0.9rem; opacity: 0.7; margin-top: 12px;">Sincronizando...</div>
+        <div id="sync-info">Sincronizando...</div>
     </div>
     <div id="cards-container"></div>
 </div>
@@ -296,11 +292,13 @@
     }
 
     function toggleEdit(sec) { editModes[sec] = !editModes[sec]; render(); }
+
     function addRow(type) {
         if(type === 'OTROS') db.otros.push(["Nuevo", 0]);
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
+
     function delRow(type, i) { 
         if(confirm('¿Eliminar?')) { 
             db[type.toLowerCase()].splice(i, 1); 
@@ -321,6 +319,31 @@
         } else {
             otrosSort.key = k;
             otrosSort.asc = (k === 'nombre') ? true : false;
+        }
+        render();
+    }
+
+    function updateVal(type, i, col, val) { 
+        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0); 
+    }
+
+    function updateNombre(source, index, val) {
+        if (source === 'extra') {
+            db.extra[index][0] = val;
+        } else if (source === 'main') {
+            db.main[index][0] = val;
+            changedMain = true;
+        }
+        render();
+    }
+
+    function updateCantidad(source, index, val) {
+        const newQ = parseFloat(val) || 0;
+        if (source === 'extra') {
+            db.extra[index][1] = newQ;
+        } else if (source === 'main') {
+            db.main[index][1] = newQ;
+            changedMain = true;
         }
         render();
     }
@@ -473,31 +496,6 @@
             </div>
             <div class="section-total">Subtotal: $ ${fmt(net)}</div>
         </div>`;
-    }
-
-    function updateVal(type, i, col, val) { 
-        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0); 
-    }
-
-    function updateNombre(source, index, val) {
-        if (source === 'extra') {
-            db.extra[index][0] = val;
-        } else if (source === 'main') {
-            db.main[index][0] = val;
-            changedMain = true;
-        }
-        render();
-    }
-
-    function updateCantidad(source, index, val) {
-        const newQ = parseFloat(val) || 0;
-        if (source === 'extra') {
-            db.extra[index][1] = newQ;
-        } else if (source === 'main') {
-            db.main[index][1] = newQ;
-            changedMain = true;
-        }
-        render();
     }
 
     fetchData();
