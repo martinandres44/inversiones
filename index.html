@@ -125,8 +125,10 @@
             cursor: pointer;
         }
 
-        .pos { color: #34d399 !important; font-weight: 600; }
-        .neg { color: #f87171 !important; font-weight: 600; }
+        td { color: var(--text); max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .pos { color: #34d399; font-weight: 600; }
+        .neg { color: #f87171; font-weight: 600; }
 
         .subtotal-row { background: rgba(59,130,246,0.08); font-weight: 700; color: #60a5fa; }
 
@@ -142,12 +144,18 @@
         input.edit-in {
             background: #1e293b;
             border: 1px solid #475569;
-            color: white !important;
+            color: white;
             padding: 7px 10px;
             border-radius: 8px;
             font-size: 0.92rem;
             width: 100%;
             box-sizing: border-box;
+        }
+
+        input.edit-in:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+            outline: none;
         }
 
         .btn-tool, .btn-save, .btn-add, .btn-del {
@@ -162,12 +170,12 @@
         .btn-save { background: var(--a); color: white; }
         .btn-add  { background: var(--s); color: white; }
 
-        /* RESPONSIVE MÓVIL - TARJETAS SIMPLES Y VISIBLES */
+        /* RESPONSIVE MÓVIL - TARJETAS COMPACTAS SIN LABELS REPETIDOS */
         @media (max-width: 768px) {
-            body { font-size: 15px; padding: 10px; }
+            body { font-size: 14px; padding: 10px; }
             .header { padding: 24px 14px; }
-            #total-general { font-size: 2.4rem; }
-            h2 { font-size: 1.3rem; padding: 12px var(--cp); }
+            #total-general { font-size: 2.2rem; }
+            h2 { font-size: 1.15rem; padding: 12px var(--cp); }
 
             .table-wrap { overflow-x: hidden; }
 
@@ -175,60 +183,39 @@
             thead tr { display: none; }
 
             tr {
-                margin-bottom: 18px;
+                margin-bottom: 16px;
                 border: 1px solid var(--border);
                 border-radius: 12px;
                 background: var(--card-bg);
                 box-shadow: var(--shadow);
-                padding: 14px;
+                padding: 12px 14px;
             }
 
             td {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
+                align-items: center;
                 border: none;
                 padding: 6px 0;
-                font-size: 1rem;
-                color: white !important;
-            }
-
-            td strong {
-                font-weight: 600;
-                color: #94a3b8 !important;
-                min-width: 110px;
-                flex-shrink: 0;
-            }
-
-            td > span, td > input {
-                text-align: right;
-                flex: 1;
+                font-size: 0.95rem;
             }
 
             td:first-child {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
                 font-weight: bold;
-                color: white !important;
+                color: white;
                 border-bottom: 1px solid var(--border);
-                padding-bottom: 10px;
-                margin-bottom: 8px;
+                padding-bottom: 8px;
+                margin-bottom: 6px;
             }
 
             td[data-label="Total"] {
-                font-size: 1.15rem;
-                color: #60a5fa !important;
+                font-size: 1.1rem;
+                color: #60a5fa;
                 font-weight: bold;
             }
 
-            .pos, .neg { font-weight: bold !important; }
-
-            .btn-del { font-size: 1.5rem; margin-left: 10px; }
-
-            input.edit-in {
-                font-size: 1rem;
-                padding: 8px;
-                color: white !important;
-            }
+            input.edit-in { font-size: 0.95rem; padding: 6px 8px; }
         }
     </style>
 </head>
@@ -378,12 +365,12 @@
                 const index = i.source === 'main' ? i.origIndex : i.idx;
                 const type = i.source.toUpperCase();
                 return `<tr class="${canEdit ? 'editable' : ''}">
-                    <td data-label="Activo"><strong>Activo:</strong> ${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : i.n}</td>
-                    <td data-label="Cant"><strong>Cant:</strong> ${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
-                    <td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(2)}</td>
-                    <td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td>
-                    <td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td>
-                    <td data-label="Total"><strong>Total:</strong> $ ${fmt(i.sub)} ${canDelete ? `<button class="btn-del" onclick="delRow('${type}', ${index})">×</button>` : ''}</td>
+                    <td>${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : `<b>${i.n}</b>`}</td>
+                    <td>${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
+                    <td>$ ${i.p.toFixed(2)}</td>
+                    <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
+                    <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
+                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canDelete ? `<button class="btn-del" onclick="delRow('${type}', ${index})">×</button>` : ''}</td>
                 </tr>`;
             }).join('');
             const net = sSub + margin;
@@ -398,7 +385,7 @@
             let tSub = 0, tDc = 0;
             const processGroup = (list, label) => {
                 let lSub = 0, lDc = 0;
-                let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo"><strong>Fondo:</strong> ${i.n}</td><td data-label="Cant"><strong>Cant:</strong> ${i.q.toLocaleString()}</td><td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(6)}</td><td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td><td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td><td data-label="Total"><strong>Total:</strong> $ ${fmt(i.sub)}</td></tr>`; }).join('');
+                let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(6)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
                 tSub += lSub; tDc += lDc;
                 return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lDc>=0?'pos':'neg'}">$ ${fmt(lDc)}</td><td class="${lDc>=0?'pos':'neg'}">${(lSub-lDc!==0?lDc/(lSub-lDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lSub)}</td></tr>`;
             };
@@ -410,7 +397,7 @@
         [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(c => {
             const list = cats[c[0]]; if (list.length === 0) return;
             let sub = 0, dc = 0;
-            let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo"><strong>Fondo:</strong> ${i.n}</td><td data-label="Cant"><strong>Cant:</strong> ${i.q.toLocaleString()}</td><td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(2)}</td><td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td><td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td><td data-label="Total"><strong>Total:</strong> $ ${fmt(i.sub)}</td></tr>`; }).join('');
+            let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             if (c[0] !== "JORGE") { globalTotal += sub; globalDC += dc; }
             containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
         });
@@ -448,8 +435,8 @@
                 : '';
 
             return `<tr>
-                <td data-label="Concepto"><strong>Concepto:</strong> ${nombreCell}</td>
-                <td data-label="Monto"><strong>Monto:</strong> ${montoCell}</td>
+                <td>${nombreCell}</td>
+                <td style="text-align:right">${montoCell}</td>
                 <td class="${editModes.Otros ? '' : 'hidden'}">${delCell}</td>
             </tr>`;
         }).join('');
