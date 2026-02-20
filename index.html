@@ -282,7 +282,7 @@
         }
         tr:last-child td { border-bottom: none; }
         tbody tr:hover { background: rgba(255,255,255,0.02); }
-        .mono { font-family: 'Space Mono', monospace; font-size: 0.82rem; }
+        .mono { font-family: 'Space Mono', monospace; font-size: 0.82rem; white-space: nowrap; }
         .pos { color: var(--green) !important; font-weight: 600; }
         .neg { color: var(--red) !important; font-weight: 600; }
         .subtotal-row td { background: rgba(59,130,246,0.06); color: var(--accent-bright); font-weight: 700; font-size: 0.82rem; }
@@ -403,6 +403,15 @@
                 border: none;
                 padding: 5px 0;
                 border-bottom: 1px solid var(--border);
+                gap: 8px;
+            }
+            tbody td > * { white-space: nowrap; }
+            tbody td.mono span {
+                margin-left: auto;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+                display: inline-block;
+                min-width: 90px;
             }
             tbody td:last-child { border-bottom: none; }
             tbody td:first-child {
@@ -628,11 +637,11 @@
             const index = i.source === 'main' ? i.origIndex : i.idx;
             return `<tr>
                 <td data-label="Activo">${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : `<b>${i.n}</b>`}</td>
-                <td data-label="Cant" class="mono">${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
-                <td data-label="Precio" class="mono">$ ${i.p.toFixed(2)}</td>
-                <td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td>
-                <td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td>
-                <td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)} ${canEdit ? `<button class="btn-del" onclick="delRow('${i.source === 'extra' ? 'EXTRA' : 'MAIN'}', ${index})">×</button>` : ''}</td>
+                <td data-label="Cant" class="mono">${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : `<span>${i.q.toLocaleString()}</span>`}</td>
+                <td data-label="Precio" class="mono"><span>$ ${i.p.toFixed(2)}</span></td>
+                <td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}"><span>$ ${fmt(i.dc_v)}</span></td>
+                <td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}"><span>${i.dc_p.toFixed(2)}%</span></td>
+                <td data-label="Total" class="mono" style="text-align:right"><span>$ ${fmt(i.sub)}</span> ${canEdit ? `<button class="btn-del" onclick="delRow('${i.source === 'extra' ? 'EXTRA' : 'MAIN'}', ${index})">×</button>` : ''}</td>
             </tr>`;
         }).join('');
         // sub = bruto de acciones; net = sub + margin (margen es negativo)
@@ -692,10 +701,10 @@
         let tSub = 0, tDc = 0;
         const processGroup = (list, label) => {
             let lSub = 0, lDc = 0;
-            let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono">${i.q.toLocaleString()}</td><td data-label="VCP" class="mono">$ ${i.p.toFixed(6)}</td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono"><span>${i.q.toLocaleString()}</span></td><td data-label="VCP" class="mono"><span>$ ${i.p.toFixed(6)}</span></td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}"><span>$ ${fmt(i.dc_v)}</span></td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}"><span>${i.dc_p.toFixed(2)}%</span></td><td data-label="Total" class="mono" style="text-align:right"><span>$ ${fmt(i.sub)}</span></td></tr>`; }).join('');
             tSub += lSub; tDc += lDc;
             const subPct = (lSub - lDc) !== 0 ? lDc / (lSub - lDc) * 100 : 0;
-            return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}">$ ${fmt(lDc)}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}">${subPct.toFixed(2)}%</td><td class="mono" style="text-align:right">$ ${fmt(lSub)}</td></tr>`;
+            return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}"><span>$ ${fmt(lDc)}</span></td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}"><span>${subPct.toFixed(2)}%</span></td><td class="mono" style="text-align:right"><span>$ ${fmt(lSub)}</span></td></tr>`;
         };
         const rows = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
         return `<div class="card">
@@ -724,7 +733,7 @@
     // ─── BUILD MUTUAL CARD HTML ───
     function buildMutualCard(label, color, data) {
         let sub = 0, dc = 0;
-        const rows = data.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono">${i.q.toLocaleString()}</td><td data-label="Precio" class="mono">$ ${i.p.toFixed(2)}</td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+        const rows = data.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono"><span>${i.q.toLocaleString()}</span></td><td data-label="Precio" class="mono"><span>$ ${i.p.toFixed(2)}</span></td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}"><span>$ ${fmt(i.dc_v)}</span></td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}"><span>${i.dc_p.toFixed(2)}%</span></td><td data-label="Total" class="mono" style="text-align:right"><span>$ ${fmt(i.sub)}</span></td></tr>`; }).join('');
         return `<div class="card">
             <div class="card-header">
                 <div class="card-title">
@@ -761,7 +770,7 @@
             const edit = editModes.Otros;
             return `<tr>
                 <td data-label="Concepto">${edit ? `<input class="edit-in" value="${item.n}" onchange="updateVal('OTROS',${origIdx},0,this.value)">` : `<b>${item.n}</b>`}</td>
-                <td data-label="Monto" class="mono" style="text-align:right">${edit ? `<input type="number" class="edit-in" style="text-align:right" value="${item.v}" onchange="updateVal('OTROS',${origIdx},1,this.value)">` : `$ ${fmt(item.v)}`}</td>
+                <td data-label="Monto" class="mono" style="text-align:right">${edit ? `<input type="number" class="edit-in" style="text-align:right" value="${item.v}" onchange="updateVal('OTROS',${origIdx},1,this.value)">` : `<span>$ ${fmt(item.v)}</span>`}</td>
                 <td class="${edit ? '' : 'hidden'}">${edit ? `<button class="btn-del" onclick="delRow('OTROS',${origIdx})">×</button>` : ''}</td>
             </tr>`;
         }).join('');
