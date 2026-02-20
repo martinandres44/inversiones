@@ -54,7 +54,6 @@
             --radius: 14px;
             --shadow: 0 8px 20px -4px rgba(0,0,0,0.4);
         }
-
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background: var(--bg);
@@ -64,9 +63,7 @@
             line-height: 1.45;
             font-size: 15px;
         }
-
         .container { max-width: 100%; margin: 0 auto; padding-bottom: 40px; }
-
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
@@ -76,11 +73,9 @@
             margin-bottom: 24px;
             box-shadow: var(--shadow);
         }
-
         #total-general { font-size: clamp(2.2rem, 8vw, 3.2rem); font-weight: 800; margin: 8px 0 6px; }
         .header-dc { font-size: 1.25rem; opacity: 0.9; }
         #sync-info { font-size: 0.85rem; opacity: 0.7; margin-top: 10px; }
-
         .card {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -89,8 +84,7 @@
             overflow: hidden;
             box-shadow: var(--shadow);
         }
-
-        h2 {
+        .card-header {
             padding: 14px var(--cp);
             margin: 0;
             font-size: 1.25rem;
@@ -100,22 +94,31 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 10px;
+            cursor: pointer;
+            user-select: none;
         }
-
+        .card-header .toggle {
+            font-size: 1.4rem;
+            transition: transform 0.3s;
+        }
+        .card.collapsed .toggle { transform: rotate(180deg); }
+        .card.collapsed .card-body { display: none; }
+        .card.collapsed .summary {
+            display: block;
+            padding: 0 16px 12px;
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+        .summary { display: none; }
+        .card-body { padding: 0; }
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
         table { width: 100%; border-collapse: collapse; }
-
         th, td {
             padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             font-size: 0.92rem;
         }
-
         th {
             background: rgba(30,41,59,0.6);
             color: #cbd5e1;
@@ -124,14 +127,9 @@
             letter-spacing: 0.4px;
             cursor: pointer;
         }
-
-        td { color: var(--text); max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-        .pos { color: #34d399; font-weight: 600; }
-        .neg { color: #f87171; font-weight: 600; }
-
+        .pos { color: #34d399 !important; font-weight: 600; }
+        .neg { color: #f87171 !important; font-weight: 600; }
         .subtotal-row { background: rgba(59,130,246,0.08); font-weight: 700; color: #60a5fa; }
-
         .section-total {
             padding: 16px var(--cp);
             text-align: right;
@@ -140,24 +138,16 @@
             background: rgba(15,23,42,0.4);
             border-top: 1px solid var(--border);
         }
-
         input.edit-in {
             background: #1e293b;
             border: 1px solid #475569;
-            color: white;
+            color: white !important;
             padding: 7px 10px;
             border-radius: 8px;
             font-size: 0.92rem;
             width: 100%;
             box-sizing: border-box;
         }
-
-        input.edit-in:focus {
-            border-color: #60a5fa;
-            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
-            outline: none;
-        }
-
         .btn-tool, .btn-save, .btn-add, .btn-del {
             font-size: 1.3rem;
             padding: 4px 8px;
@@ -165,57 +155,56 @@
             border: none;
             cursor: pointer;
         }
-
         .btn-save, .btn-add { font-size: 0.88rem; padding: 7px 14px; border-radius: 8px; }
         .btn-save { background: var(--a); color: white; }
-        .btn-add  { background: var(--s); color: white; }
+        .btn-add { background: var(--s); color: white; }
 
-        /* RESPONSIVE MÓVIL - TARJETAS COMPACTAS SIN LABELS REPETIDOS */
+        /* RESPONSIVE MÓVIL */
         @media (max-width: 768px) {
-            body { font-size: 14px; padding: 10px; }
+            body { font-size: 15px; padding: 10px; }
             .header { padding: 24px 14px; }
-            #total-general { font-size: 2.2rem; }
-            h2 { font-size: 1.15rem; padding: 12px var(--cp); }
-
+            #total-general { font-size: 2.4rem; }
+            h2 { font-size: 1.3rem; padding: 12px var(--cp); }
             .table-wrap { overflow-x: hidden; }
-
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { display: none; }
-
             tr {
-                margin-bottom: 16px;
+                margin-bottom: 18px;
                 border: 1px solid var(--border);
                 border-radius: 12px;
                 background: var(--card-bg);
                 box-shadow: var(--shadow);
-                padding: 12px 14px;
+                padding: 14px;
             }
-
             td {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
                 border: none;
                 padding: 6px 0;
-                font-size: 0.95rem;
+                font-size: 1rem;
+                color: white !important;
             }
-
             td:first-child {
-                font-size: 1.1rem;
+                font-size: 1.2rem;
                 font-weight: bold;
-                color: white;
+                color: white !important;
                 border-bottom: 1px solid var(--border);
-                padding-bottom: 8px;
-                margin-bottom: 6px;
+                padding-bottom: 10px;
+                margin-bottom: 8px;
             }
-
             td[data-label="Total"] {
-                font-size: 1.1rem;
-                color: #60a5fa;
+                font-size: 1.15rem;
+                color: #60a5fa !important;
                 font-weight: bold;
             }
-
-            input.edit-in { font-size: 0.95rem; padding: 6px 8px; }
+            .pos, .neg { font-weight: bold !important; }
+            .btn-del { font-size: 1.5rem; margin-left: 10px; }
+            input.edit-in {
+                font-size: 1rem;
+                padding: 8px;
+                color: white !important;
+            }
         }
     </style>
 </head>
@@ -288,18 +277,18 @@
         render();
     }
 
-    function delRow(type, i) { 
-        if(confirm('¿Eliminar?')) { 
-            db[type.toLowerCase()].splice(i, 1); 
+    function delRow(type, i) {
+        if(confirm('¿Eliminar?')) {
+            db[type.toLowerCase()].splice(i, 1);
             if (type === 'MAIN') changedMain = true;
-            render(); 
-        } 
+            render();
+        }
     }
 
-    function setSort(k) { 
-        sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false; 
-        sortConfig.key = k; 
-        render(); 
+    function setSort(k) {
+        sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false;
+        sortConfig.key = k;
+        render();
     }
 
     function setOtrosSort(k) {
@@ -312,8 +301,8 @@
         render();
     }
 
-    function updateVal(type, i, col, val) { 
-        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0); 
+    function updateVal(type, i, col, val) {
+        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0);
     }
 
     function updateNombre(source, index, val) {
@@ -335,6 +324,11 @@
             changedMain = true;
         }
         render();
+    }
+
+    function toggleSection(id) {
+        const card = document.getElementById(id);
+        card.classList.toggle('collapsed');
     }
 
     function render() {
@@ -375,7 +369,18 @@
             }).join('');
             const net = sSub + margin;
             globalTotal += net; globalDC += sDc;
-            containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true);
+            const summary = `Subtotal: $ ${fmt(net)} | Día: <span class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)} (${((sDc / (net - sDc || 1)) * 100).toFixed(2)}%)</span>`;
+            containerHtml += `
+            <div class="card" id="acciones">
+                <div class="card-header" onclick="toggleSection('acciones')">
+                    📈 Acciones
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="summary">${summary}</div>
+                <div class="card-body">
+                    ${createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true)}
+                </div>
+            </div>`;
         }
 
         if (cats.FCI.length > 0) {
@@ -391,7 +396,18 @@
             };
             let rowsFci = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
             globalTotal += tSub; globalDC += tDc;
-            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub);
+            const summary = `Subtotal: $ ${fmt(tSub)} | Día: <span class="${tDc>=0?'pos':'neg'}">$ ${fmt(tDc)} (${((tDc / (tSub - tDc || 1)) * 100).toFixed(2)}%)</span>`;
+            containerHtml += `
+            <div class="card" id="fci">
+                <div class="card-header" onclick="toggleSection('fci')">
+                    🇦🇷 Fondos Argentina
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="summary">${summary}</div>
+                <div class="card-body">
+                    ${createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub)}
+                </div>
+            </div>`;
         }
 
         [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(c => {
@@ -399,7 +415,18 @@
             let sub = 0, dc = 0;
             let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
             if (c[0] !== "JORGE") { globalTotal += sub; globalDC += dc; }
-            containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
+            const summary = `Subtotal: $ ${fmt(sub)} | Día: <span class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)} (${((dc / (sub - dc || 1)) * 100).toFixed(2)}%)</span>`;
+            containerHtml += `
+            <div class="card" id="${c[0].toLowerCase()}">
+                <div class="card-header" onclick="toggleSection('${c[0].toLowerCase()}')">
+                    ${c[1]}
+                    <span class="toggle">▼</span>
+                </div>
+                <div class="summary">${summary}</div>
+                <div class="card-body">
+                    ${createCard(c[1], c[2], rows, dc, sub, sub)}
+                </div>
+            </div>`;
         });
 
         let otrosData = db.otros.map((item, i) => ({
@@ -442,7 +469,30 @@
         }).join('');
 
         globalTotal += oSub;
-        containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos <span>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveOtros()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button></span></h2><div class="table-wrap"><table><thead><tr><th onclick="setOtrosSort('nombre')">Concepto ↕</th><th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div><div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div></div>`;
+        const summaryOtros = `Subtotal: $ ${fmt(oSub)}`;
+        containerHtml += `
+        <div class="card" id="otros">
+            <div class="card-header" onclick="toggleSection('otros')">
+                💼 Otros Activos
+                <span class="toggle">▼</span>
+            </div>
+            <div class="summary">${summaryOtros}</div>
+            <div class="card-body">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="setOtrosSort('nombre')">Concepto ↕</th>
+                                <th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th>
+                                <th class="${editModes.Otros?'':'hidden'}"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${oRows}</tbody>
+                    </table>
+                </div>
+                <div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div>
+            </div>
+        </div>`;
 
         document.getElementById('cards-container').innerHTML = containerHtml;
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
@@ -452,8 +502,7 @@
 
     function createCard(title, color, rows, dc, sub, net, isStocks=false) {
         const pct = (sub - dc !== 0) ? (dc / (sub - dc) * 100) : 0;
-        return `<div class="card" style="border-top-color: ${color}">
-            <h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveStocks()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2>
+        return `
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -483,8 +532,7 @@
                     </tfoot>
                 </table>
             </div>
-            <div class="section-total">Subtotal: $ ${fmt(net)}</div>
-        </div>`;
+            <div class="section-total">Subtotal: $ ${fmt(net)}</div>`;
     }
 
     fetchData();
