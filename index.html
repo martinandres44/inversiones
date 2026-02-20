@@ -29,7 +29,7 @@
         ]
     }">
 
-    <!-- iOS / Apple -->
+    <!-- iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Patrimonio Martín">
@@ -37,188 +37,97 @@
 
     <style>
         :root {
-            --p: #0f172a;
-            --p-light: #1e293b;
-            --a: #3b82f6;
-            --s: #10b981;
-            --d: #ef4444;
-            --m: #f59e0b;
-            --j: #6b7280;
-            --o: #475569;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #e2e8f0;
-            --text-light: #94a3b8;
-            --border: #334155;
-            --cp: 16px;
-            --radius: 14px;
-            --shadow: 0 8px 20px -4px rgba(0,0,0,0.4);
+            --p: #0f172a; --p-light: #1e293b; --a: #3b82f6; --s: #10b981; --d: #ef4444;
+            --m: #f59e0b; --j: #6b7280; --o: #475569; --bg: #0f172a; --card-bg: #1e293b;
+            --text: #e2e8f0; --text-light: #94a3b8; --border: #334155;
+            --cp: 16px; --radius: 14px; --shadow: 0 8px 20px -4px rgba(0,0,0,0.4);
             --shadow-hover: 0 16px 30px -8px rgba(0,0,0,0.5);
         }
 
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 12px;
-            line-height: 1.45;
-            font-size: 15px;
+            background: var(--bg); color: var(--text);
+            margin: 0; padding: 12px; line-height: 1.45; font-size: 15px;
             -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding-bottom: 40px;
-        }
+        .container { max-width: 100%; margin: 0 auto; padding-bottom: 40px; }
 
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-            padding: 32px 16px;
-            border-radius: var(--radius);
-            text-align: center;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
+            color: white; padding: 32px 16px; border-radius: var(--radius);
+            text-align: center; margin-bottom: 24px; box-shadow: var(--shadow);
+            position: relative; overflow: hidden;
         }
 
-        #total-general {
-            font-size: clamp(2.2rem, 8vw, 3.2rem);
-            font-weight: 800;
-            margin: 8px 0 6px;
-        }
-
-        .header-dc {
-            font-size: 1.25rem;
-            opacity: 0.9;
-        }
-
-        #sync-info {
-            font-size: 0.85rem;
-            opacity: 0.7;
-            margin-top: 10px;
-        }
+        #total-general { font-size: clamp(2.2rem, 8vw, 3.2rem); font-weight: 800; margin: 8px 0 6px; }
+        .header-dc { font-size: 1.25rem; opacity: 0.9; }
+        #sync-info { font-size: 0.85rem; opacity: 0.7; margin-top: 10px; }
 
         .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            margin-bottom: 24px;
-            border-top: 5px solid transparent;
-            overflow: hidden;
-            box-shadow: var(--shadow);
+            background: var(--card-bg); border-radius: var(--radius); margin-bottom: 24px;
+            border-top: 5px solid transparent; overflow: hidden; box-shadow: var(--shadow);
             transition: transform 0.2s ease;
         }
 
-        .card:hover {
-            transform: translateY(-3px);
-        }
+        .card:hover { transform: translateY(-3px); }
 
         h2 {
-            padding: 14px var(--cp);
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: white;
+            padding: 14px var(--cp); margin: 0; font-size: 1.25rem; font-weight: 700; color: white;
             background: linear-gradient(to right, rgba(30,41,59,0.6), rgba(15,23,42,0.8));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px;
         }
 
-        .table-wrap {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
+            padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);
             font-size: 0.92rem;
         }
 
         th {
-            background: rgba(30,41,59,0.6);
-            color: #cbd5e1;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            cursor: pointer;
+            background: rgba(30,41,59,0.6); color: #cbd5e1; font-size: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.4px; cursor: pointer;
         }
 
         td {
-            color: var(--text);
-            max-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: var(--text); max-width: 0; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
         }
 
         .pos { color: #34d399; font-weight: 600; }
         .neg { color: #f87171; font-weight: 600; }
 
-        .subtotal-row {
-            background: rgba(59,130,246,0.08);
-            font-weight: 700;
-            color: #60a5fa;
-        }
+        .subtotal-row { background: rgba(59,130,246,0.08); font-weight: 700; color: #60a5fa; }
 
         .section-total {
-            padding: 16px var(--cp);
-            text-align: right;
-            font-weight: 700;
-            font-size: 1rem;
-            background: rgba(15,23,42,0.4);
-            border-top: 1px solid var(--border);
+            padding: 16px var(--cp); text-align: right; font-weight: 700; font-size: 1rem;
+            background: rgba(15,23,42,0.4); border-top: 1px solid var(--border);
         }
 
         input.edit-in {
-            background: #1e293b;
-            border: 1px solid #475569;
-            color: white;
-            padding: 7px 10px;
-            border-radius: 8px;
-            font-size: 0.92rem;
-            width: 100%;
-            box-sizing: border-box;
+            background: #1e293b; border: 1px solid #475569; color: white;
+            padding: 7px 10px; border-radius: 8px; font-size: 0.92rem;
+            width: 100%; box-sizing: border-box;
         }
 
         input.edit-in:focus {
-            border-color: #60a5fa;
-            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
-            outline: none;
+            border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.2); outline: none;
         }
 
         .btn-tool, .btn-save, .btn-add, .btn-del {
-            font-size: 1.3rem;
-            padding: 4px 8px;
-            transition: all 0.18s;
-            background: none;
-            border: none;
-            cursor: pointer;
+            font-size: 1.3rem; padding: 4px 8px; transition: all 0.18s;
+            background: none; border: none; cursor: pointer;
         }
 
-        .btn-save, .btn-add {
-            font-size: 0.88rem;
-            padding: 7px 14px;
-            border-radius: 8px;
-        }
-
+        .btn-save, .btn-add { font-size: 0.88rem; padding: 7px 14px; border-radius: 8px; }
         .btn-save { background: var(--a); color: white; }
         .btn-add  { background: var(--s); color: white; }
 
-        /* ────────────────────────────── RESPONSIVE MÓVIL ────────────────────────────── */
+        /* RESPONSIVE MÓVIL - TARJETAS COMPACTAS */
         @media (max-width: 768px) {
             body { font-size: 14px; padding: 10px; }
             .header { padding: 24px 14px; }
@@ -237,6 +146,7 @@
                 background: var(--card-bg);
                 box-shadow: var(--shadow);
                 padding: 12px 14px;
+                gap: 6px;
             }
 
             td {
@@ -261,7 +171,6 @@
                 color: var(--text);
             }
 
-            /* Activo destacado */
             td:first-child {
                 font-size: 1.1rem;
                 font-weight: 700;
@@ -439,7 +348,7 @@
                 const type = i.source.toUpperCase();
                 return `<tr class="${canEdit ? 'editable' : ''}">
                     <td data-label="Activo"><strong>Activo:</strong> ${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : i.n}</td>
-                    <td data-label="Cantidad"><strong>Cant:</strong> ${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
+                    <td data-label="Cant"><strong>Cant:</strong> ${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
                     <td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(2)}</td>
                     <td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td>
                     <td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td>
@@ -458,7 +367,7 @@
             let tSub = 0, tDc = 0;
             const processGroup = (list, label) => {
                 let lSub = 0, lDc = 0;
-                let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cant">${i.q.toLocaleString()}</td><td data-label="Precio">$ ${i.p.toFixed(6)}</td><td data-label="Día $" class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+                let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo"><strong>Fondo:</strong> ${i.n}</td><td data-label="Cant"><strong>Cant:</strong> ${i.q.toLocaleString()}</td><td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(6)}</td><td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td><td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td><td data-label="Total"><strong>Total:</strong> $ ${fmt(i.sub)}</td></tr>`; }).join('');
                 tSub += lSub; tDc += lDc;
                 return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lDc>=0?'pos':'neg'}">$ ${fmt(lDc)}</td><td class="${lDc>=0?'pos':'neg'}">${(lSub-lDc!==0?lDc/(lSub-lDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lSub)}</td></tr>`;
             };
@@ -470,7 +379,7 @@
         [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(c => {
             const list = cats[c[0]]; if (list.length === 0) return;
             let sub = 0, dc = 0;
-            let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cant">${i.q.toLocaleString()}</td><td data-label="Precio">$ ${i.p.toFixed(2)}</td><td data-label="Día $" class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo"><strong>Fondo:</strong> ${i.n}</td><td data-label="Cant"><strong>Cant:</strong> ${i.q.toLocaleString()}</td><td data-label="Precio"><strong>Precio:</strong> $ ${i.p.toFixed(2)}</td><td data-label="Día $"><strong>Día $:</strong> <span class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</span></td><td data-label="Día %"><strong>Día %:</strong> <span class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</span></td><td data-label="Total"><strong>Total:</strong> $ ${fmt(i.sub)}</td></tr>`; }).join('');
             if (c[0] !== "JORGE") { globalTotal += sub; globalDC += dc; }
             containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
         });
