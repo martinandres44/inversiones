@@ -3,207 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Patrimonio v33.0</title>
+    <title>Patrimonio Martín</title>
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/manifest+json,{
-        &quot;name&quot;: &quot;Patrimonio Martín&quot;,
-        &quot;short_name&quot;: &quot;Patrimonio&quot;,
-        &quot;start_url&quot;: &quot;.&quot;,
-        &quot;display&quot;: &quot;standalone&quot;,
-        &quot;background_color&quot;: &quot;#0f172a&quot;,
-        &quot;theme_color&quot;: &quot;#3b82f6&quot;,
-        &quot;icons&quot;: [
-            {
-                &quot;src&quot;: &quot;https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg&quot;,
-                &quot;sizes&quot;: &quot;192x192&quot;,
-                &quot;type&quot;: &quot;image/jpeg&quot;,
-                &quot;purpose&quot;: &quot;any maskable&quot;
-            },
-            {
-                &quot;src&quot;: &quot;https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg&quot;,
-                &quot;sizes&quot;: &quot;512x512&quot;,
-                &quot;type&quot;: &quot;image/jpeg&quot;,
-                &quot;purpose&quot;: &quot;any maskable&quot;
-            }
-        ]
-    }">
-
-    <!-- iOS -->
+    <link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;Patrimonio Martín&quot;,&quot;short_name&quot;:&quot;Patrimonio&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#080c14&quot;,&quot;theme_color&quot;:&quot;#3b82f6&quot;}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Patrimonio Martín">
-    <link rel="apple-touch-icon" href="https://thumbs.dreamstime.com/b/black-upward-trending-graph-dollar-sign-bar-chart-icon-keywords-growth-finance-upward-showing-black-upward-trending-graph-427686568.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --p: #0f172a;
-            --p-light: #1e293b;
-            --a: #3b82f6;
-            --s: #10b981;
-            --d: #ef4444;
-            --m: #f59e0b;
-            --j: #6b7280;
-            --o: #475569;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #e2e8f0;
-            --text-light: #94a3b8;
-            --border: #334155;
-            --cp: 16px;
-            --radius: 14px;
-            --shadow: 0 8px 20px -4px rgba(0,0,0,0.4);
+            --bg: #080c14;
+            --surface: #0d1525;
+            --surface2: #121d30;
+            --surface3: #192338;
+            --border: #1e2d45;
+            --border-bright: #2a3f5f;
+            --text: #e8f0fe;
+            --text-muted: #6b82a8;
+            --text-dim: #3d5275;
+            --accent: #3b82f6;
+            --accent-bright: #60a5fa;
+            --accent-dim: rgba(59,130,246,0.15);
+            --green: #10b981;
+            --green-dim: rgba(16,185,129,0.15);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.12);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245,158,11,0.15);
+            --slate: #64748b;
+            --radius: 12px;
+            --radius-sm: 8px;
         }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Sora', sans-serif;
             background: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 12px;
-            line-height: 1.45;
-            font-size: 15px;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
         }
-        .container { max-width: 100%; margin: 0 auto; padding-bottom: 40px; }
+
+        /* ─── BACKGROUND GRID ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 16px 14px 60px; }
+
+        /* ─── HEADER ─── */
         .header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-            padding: 32px 16px;
-            border-radius: var(--radius);
-            text-align: center;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-        }
-        #total-general { font-size: clamp(2.2rem, 8vw, 3.2rem); font-weight: 800; margin: 8px 0 6px; }
-        .header-dc { font-size: 1.25rem; opacity: 0.9; }
-        #sync-info { font-size: 0.85rem; opacity: 0.7; margin-top: 10px; }
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            margin-bottom: 24px;
-            border-top: 5px solid transparent;
+            background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+            border: 1px solid var(--border-bright);
+            border-radius: 18px;
+            padding: 28px 24px 22px;
+            margin-bottom: 20px;
+            position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow);
         }
-        h2 {
-            padding: 14px var(--cp);
-            margin: 0;
-            font-size: 1.25rem;
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .header-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .header-total {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(2.4rem, 8vw, 3.6rem);
+            font-weight: 400;
+            color: #fff;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        .header-dc {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        #sync-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .header-refresh {
+            margin-left: auto;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59,130,246,0.3);
+            color: var(--accent-bright);
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .header-refresh:hover { background: rgba(59,130,246,0.25); }
+
+        /* ─── SUMMARY PILLS ─── */
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .sum-pill {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .sum-pill:hover { border-color: var(--border-bright); }
+        .sum-pill-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .sum-pill-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
             font-weight: 700;
+        }
+        @media(max-width:480px){
+            .summary-strip { grid-template-columns: repeat(2,1fr); }
+        }
+
+        /* ─── TABS ─── */
+        .tabs-nav {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tabs-nav::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1;
+            min-width: fit-content;
+            white-space: nowrap;
+            padding: 9px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 9px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { color: var(--text); background: var(--surface2); }
+        .tab-btn.active {
+            background: var(--accent);
             color: white;
-            background: linear-gradient(to right, rgba(30,41,59,0.6), rgba(15,23,42,0.8));
+        }
+        .tab-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .tab-btn:not(.active) .tab-badge {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+
+        /* ─── TAB PANES ─── */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeSlide 0.25s ease; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── CARD ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
+            background: var(--surface2);
             gap: 10px;
+            flex-wrap: wrap;
         }
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-accent-bar {
+            width: 3px;
+            height: 16px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .card-actions { display: flex; align-items: center; gap: 6px; }
+
+        /* ─── TABLE ─── */
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; }
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.92rem;
-        }
         th {
-            background: rgba(30,41,59,0.6);
-            color: #cbd5e1;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            cursor: pointer;
-        }
-        .pos { color: #34d399 !important; font-weight: 600; }
-        .neg { color: #f87171 !important; font-weight: 600; }
-        .subtotal-row { background: rgba(59,130,246,0.08); font-weight: 700; color: #60a5fa; }
-        .section-total {
-            padding: 16px var(--cp);
-            text-align: right;
+            padding: 9px 14px;
+            text-align: left;
+            font-size: 0.65rem;
             font-weight: 700;
-            font-size: 1rem;
-            background: rgba(15,23,42,0.4);
-            border-top: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            background: var(--surface);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
         }
+        th:hover { color: var(--text-muted); }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.87rem;
+            color: var(--text);
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .mono { font-family: 'Space Mono', monospace; font-size: 0.82rem; }
+        .pos { color: var(--green) !important; font-weight: 600; }
+        .neg { color: var(--red) !important; font-weight: 600; }
+        .subtotal-row td { background: rgba(59,130,246,0.06); color: var(--accent-bright); font-weight: 700; font-size: 0.82rem; }
+        tfoot td {
+            background: var(--surface2);
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border-bright);
+            border-bottom: none;
+        }
+
+        /* ─── CARD FOOTER ─── */
+        .card-footer {
+            padding: 12px 18px;
+            text-align: right;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            color: var(--accent-bright);
+        }
+
+        /* ─── FORM ELEMENTS ─── */
         input.edit-in {
-            background: #1e293b;
-            border: 1px solid #475569;
-            color: white !important;
-            padding: 7px 10px;
-            border-radius: 8px;
-            font-size: 0.92rem;
+            background: var(--surface3);
+            border: 1px solid var(--border-bright);
+            color: var(--text) !important;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: 'Sora', sans-serif;
             width: 100%;
             box-sizing: border-box;
         }
-        .btn-tool, .btn-save, .btn-add, .btn-del {
-            font-size: 1.3rem;
-            padding: 4px 8px;
+        input.edit-in:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn-tool {
             background: none;
             border: none;
             cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            transition: all 0.15s;
         }
-        .btn-save, .btn-add { font-size: 0.88rem; padding: 7px 14px; border-radius: 8px; }
-        .btn-save { background: var(--a); color: white; }
-        .btn-add { background: var(--s); color: white; }
+        .btn-tool:hover { background: var(--surface3); color: var(--text); }
+        .btn-save {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .btn-save:hover { background: var(--accent-bright); }
+        .btn-add {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+        }
+        .btn-add:hover { background: rgba(16,185,129,0.25); }
+        .btn-del {
+            background: none;
+            border: none;
+            color: var(--red);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 4px;
+            opacity: 0.7;
+        }
+        .btn-del:hover { opacity: 1; }
+        .hidden { display: none !important; }
 
-        /* RESPONSIVE MÓVIL - TARJETAS SIMPLES Y VISIBLES */
-        @media (max-width: 768px) {
-            body { font-size: 15px; padding: 10px; }
-            .header { padding: 24px 14px; }
-            #total-general { font-size: 2.4rem; }
-            h2 { font-size: 1.3rem; padding: 12px var(--cp); }
+        /* ─── MARGIN ROW ─── */
+        .margin-row td { background: var(--red-dim); color: var(--red) !important; }
+        .margin-row input.edit-in {
+            color: var(--red) !important;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* ─── MOBILE CARDS ─── */
+        @media (max-width: 640px) {
+            .tabs-nav { gap: 2px; }
+            .tab-btn { padding: 8px 10px; font-size: 0.75rem; }
             .table-wrap { overflow-x: hidden; }
-            table, thead, tbody, th, td, tr { display: block; }
+            table, thead, tbody, tfoot, th, td, tr { display: block; }
             thead tr { display: none; }
-            tr {
-                margin-bottom: 18px;
+            tbody tr {
+                margin-bottom: 12px;
                 border: 1px solid var(--border);
-                border-radius: 12px;
-                background: var(--card-bg);
-                box-shadow: var(--shadow);
-                padding: 14px;
+                border-radius: 10px;
+                background: var(--surface);
+                padding: 12px 14px;
             }
-            td {
+            tbody tr:hover { background: var(--surface2); }
+            tbody td {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
+                align-items: center;
                 border: none;
-                padding: 6px 0;
-                font-size: 1rem;
-                color: white !important;
-            }
-            td:first-child {
-                font-size: 1.2rem;
-                font-weight: bold;
-                color: white !important;
+                padding: 5px 0;
                 border-bottom: 1px solid var(--border);
-                padding-bottom: 10px;
-                margin-bottom: 8px;
             }
-            td[data-label="Total"] {
-                font-size: 1.15rem;
-                color: #60a5fa !important;
-                font-weight: bold;
-            }
-            .pos, .neg { font-weight: bold !important; }
-            .btn-del { font-size: 1.5rem; margin-left: 10px; }
-            input.edit-in {
+            tbody td:last-child { border-bottom: none; }
+            tbody td:first-child {
                 font-size: 1rem;
-                padding: 8px;
-                color: white !important;
+                font-weight: 700;
+                padding-bottom: 10px;
+                margin-bottom: 4px;
             }
+            tbody td::before {
+                content: attr(data-label);
+                font-size: 0.65rem;
+                color: var(--text-dim);
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+            .subtotal-row { border-radius: 6px !important; margin-bottom: 4px !important; }
+            /* tfoot: show as compact summary rows */
+            tfoot tr {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 14px;
+                border-top: 1px solid var(--border-bright);
+                background: var(--surface2);
+                flex-wrap: wrap;
+                gap: 4px 12px;
+            }
+            tfoot td {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                border: none;
+                padding: 2px 0;
+                background: transparent !important;
+                font-size: 0.8rem;
+            }
+            tfoot td[colspan] { flex: 1 1 100%; color: var(--text-muted) !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+            tfoot td:last-child { margin-left: auto; font-weight: 700; }
+            tfoot td { white-space: nowrap; }
         }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="app">
+
+    <!-- HEADER -->
     <div class="header">
-        <small>PATRIMONIO CONSOLIDADO MARTÍN</small>
-        <div id="total-general">$ 0,00</div>
-        <div id="header-dc" class="header-dc">--</div>
-        <div id="sync-info">Sincronizando...</div>
+        <div class="header-label">Patrimonio Consolidado — Martín</div>
+        <div class="header-total" id="total-general">$ 0,00</div>
+        <div id="header-dc" class="header-dc">—</div>
+        <div class="header-meta">
+            <div id="sync-info">Sincronizando...</div>
+            <button class="header-refresh" onclick="fetchData()">↻ Actualizar</button>
+        </div>
     </div>
-    <div id="cards-container"></div>
+
+    <!-- SUMMARY PILLS -->
+    <div class="summary-strip" id="summary-strip">
+        <div class="sum-pill">
+            <div class="sum-pill-label">Acciones</div>
+            <div class="sum-pill-val" id="sum-stocks">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Fondos AR</div>
+            <div class="sum-pill-val" id="sum-fci">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Mutual Funds</div>
+            <div class="sum-pill-val" id="sum-mutual">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Otros Activos</div>
+            <div class="sum-pill-val" id="sum-otros">—</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-nav" id="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-all" onclick="switchTab(this)">
+            🌐 Todo
+        </button>
+        <button class="tab-btn" data-tab="tab-stocks" onclick="switchTab(this)">
+            📈 Acciones
+        </button>
+        <button class="tab-btn" data-tab="tab-fci" onclick="switchTab(this)">
+            🇦🇷 Fondos AR
+        </button>
+        <button class="tab-btn" data-tab="tab-mutual" onclick="switchTab(this)">
+            🏦 Mutual
+        </button>
+        <button class="tab-btn" data-tab="tab-otros" onclick="switchTab(this)">
+            💼 Otros
+        </button>
+    </div>
+
+    <!-- TAB PANES -->
+    <div id="tab-all" class="tab-pane active">
+        <div id="all-container"></div>
+    </div>
+    <div id="tab-stocks" class="tab-pane">
+        <div id="stocks-container"></div>
+    </div>
+    <div id="tab-fci" class="tab-pane">
+        <div id="fci-container"></div>
+    </div>
+    <div id="tab-mutual" class="tab-pane">
+        <div id="mutual-container"></div>
+    </div>
+    <div id="tab-otros" class="tab-pane">
+        <div id="otros-container"></div>
+    </div>
+
 </div>
 
 <script>
@@ -214,38 +526,43 @@
     let sortConfig = { key: 'sub', asc: false };
     let otrosSort = { key: 'monto', asc: false };
     let changedMain = false;
-    const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const fmt = (v) => (v || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function switchTab(btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    }
 
     async function fetchData() {
+        document.getElementById('sync-info').innerText = "Sincronizando...";
         try {
             const res = await fetch(SCRIPT_URL);
             db = await res.json();
-            if (db.otros.length === 0) {
+            if (!db.otros || db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
             render();
-            document.getElementById('sync-info').innerText = "Sincronizado ✅";
-        } catch (e) { document.getElementById('sync-info').innerText = "Sync Error ❌"; }
+            const now = new Date();
+            document.getElementById('sync-info').innerText = `Sync ✓ ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+        } catch (e) {
+            document.getElementById('sync-info').innerText = "Error de sincronización ✗";
+        }
     }
 
-    async function saveData(type, data) {
+    async function saveData(type) {
         document.getElementById('sync-info').innerText = "Guardando...";
-        if (type === 'OTROS') {
-            data = db.otros.map(i => ({n:i[0], v:i[1]}));
-        } else if (type === 'EXTRA') {
-            data = db.extra.map(i => ({n:i[0], q:i[1], p:i[2], dc_v:i[3], dc_p:i[4]}));
-        } else if (type === 'MAIN') {
-            data = db.main;
-        }
+        let data;
+        if (type === 'OTROS') data = db.otros.map(i => ({ n: i[0], v: i[1] }));
+        else if (type === 'EXTRA') data = db.extra.map(i => ({ n: i[0], q: i[1], p: i[2], dc_v: i[3], dc_p: i[4] }));
+        else if (type === 'MAIN') data = db.main;
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type, data }) });
     }
 
     async function saveStocks() {
         await saveData('EXTRA');
-        if (changedMain) {
-            await saveData('MAIN');
-            changedMain = false;
-        }
+        if (changedMain) { await saveData('MAIN'); changedMain = false; }
         editModes.STOCKS = false;
         fetchData();
     }
@@ -259,13 +576,13 @@
     function toggleEdit(sec) { editModes[sec] = !editModes[sec]; render(); }
 
     function addRow(type) {
-        if(type === 'OTROS') db.otros.push(["Nuevo", 0]);
+        if (type === 'OTROS') db.otros.push(["Nuevo", 0]);
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
 
     function delRow(type, i) {
-        if(confirm('¿Eliminar?')) {
+        if (confirm('¿Eliminar fila?')) {
             db[type.toLowerCase()].splice(i, 1);
             if (type === 'MAIN') changedMain = true;
             render();
@@ -273,195 +590,262 @@
     }
 
     function setSort(k) {
-        sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false;
+        sortConfig.asc = sortConfig.key === k ? !sortConfig.asc : false;
         sortConfig.key = k;
         render();
     }
 
     function setOtrosSort(k) {
-        if (otrosSort.key === k) {
-            otrosSort.asc = !otrosSort.asc;
-        } else {
-            otrosSort.key = k;
-            otrosSort.asc = (k === 'nombre') ? true : false;
-        }
+        if (otrosSort.key === k) otrosSort.asc = !otrosSort.asc;
+        else { otrosSort.key = k; otrosSort.asc = k === 'nombre'; }
         render();
     }
 
     function updateVal(type, i, col, val) {
-        db[type.toLowerCase()][i][col] = (col === 0) ? val : (parseFloat(val) || 0);
+        db[type.toLowerCase()][i][col] = col === 0 ? val : (parseFloat(val) || 0);
     }
 
     function updateNombre(source, index, val) {
-        if (source === 'extra') {
-            db.extra[index][0] = val;
-        } else if (source === 'main') {
-            db.main[index][0] = val;
-            changedMain = true;
-        }
+        if (source === 'extra') db.extra[index][0] = val;
+        else if (source === 'main') { db.main[index][0] = val; changedMain = true; }
         render();
     }
 
     function updateCantidad(source, index, val) {
         const newQ = parseFloat(val) || 0;
-        if (source === 'extra') {
-            db.extra[index][1] = newQ;
-        } else if (source === 'main') {
-            db.main[index][1] = newQ;
-            changedMain = true;
-        }
+        if (source === 'extra') db.extra[index][1] = newQ;
+        else if (source === 'main') { db.main[index][1] = newQ; changedMain = true; }
         render();
     }
 
+    // ─── BUILD STOCK CARD HTML ───
+    function buildStocksCard(data) {
+        const sorted = [...data].sort((a, b) => (sortConfig.asc ? 1 : -1) * (a[sortConfig.key] > b[sortConfig.key] ? 1 : -1));
+        let sub = 0, dc = 0;
+        const rows = sorted.map(i => {
+            sub += i.sub; dc += i.dc_v;
+            const canEdit = editModes.STOCKS;
+            const index = i.source === 'main' ? i.origIndex : i.idx;
+            return `<tr>
+                <td data-label="Activo">${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : `<b>${i.n}</b>`}</td>
+                <td data-label="Cant" class="mono">${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
+                <td data-label="Precio" class="mono">$ ${i.p.toFixed(2)}</td>
+                <td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td>
+                <td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td>
+                <td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)} ${canEdit ? `<button class="btn-del" onclick="delRow('${i.source === 'extra' ? 'EXTRA' : 'MAIN'}', ${index})">×</button>` : ''}</td>
+            </tr>`;
+        }).join('');
+        // sub = bruto de acciones; net = sub + margin (margen es negativo)
+        const net = sub + margin;
+        const pct = sub !== 0 ? (dc / sub * 100) : 0;
+        const edit = editModes.STOCKS;
+        return `<div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-accent-bar" style="background:var(--accent)"></div>
+                    📈 Acciones
+                </div>
+                <div class="card-actions">
+                    ${edit ? `<button class="btn-add" onclick="addRow('EXTRA')">+ Agregar</button><button class="btn-save" onclick="saveStocks()">Guardar</button>` : ''}
+                    <button class="btn-tool" onclick="toggleEdit('STOCKS')" title="Editar">✏️</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th onclick="setSort('n')">Activo ↕</th>
+                        <th onclick="setSort('q')">Cant ↕</th>
+                        <th>Precio</th>
+                        <th onclick="setSort('dc_v')">Día $ ↕</th>
+                        <th onclick="setSort('dc_p')">Día % ↕</th>
+                        <th onclick="setSort('sub')" style="text-align:right">Total ↕</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right; color:var(--text-muted)">TOTAL DÍA</td>
+                            <td class="mono ${dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(dc)}</td>
+                            <td class="mono ${dc >= 0 ? 'pos' : 'neg'}">${pct.toFixed(2)}%</td>
+                            <td class="mono" style="text-align:right">$ ${fmt(sub)}</td>
+                        </tr>
+                        <tr class="margin-row">
+                            <td colspan="5" style="text-align:right; color:var(--red)">MARGEN / DEUDA</td>
+                            <td style="text-align:right">
+                                <input type="text" class="edit-in" id="margin-input" style="width:140px; text-align:right; color:var(--red); font-weight:700; font-family:'Space Mono',monospace;"
+                                    value="${fmt(margin)}"
+                                    onfocus="this.value=margin; this.type='number';"
+                                    onblur="this.type='text'; margin=parseFloat(this.value)||0; localStorage.setItem('userMargin',margin); this.value=fmt(margin); render();"
+                                    onkeydown="if(event.key==='Enter'){this.blur();}">
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="card-footer">Subtotal Acciones (neto): $ ${fmt(net)}</div>
+        </div>`;
+    }
+
+    // ─── BUILD FCI CARD HTML ───
+    function buildFciCard(data) {
+        const g1 = data.filter(f => !f.n.toUpperCase().includes("GALICIA"));
+        const g2 = data.filter(f => f.n.toUpperCase().includes("GALICIA"));
+        let tSub = 0, tDc = 0;
+        const processGroup = (list, label) => {
+            let lSub = 0, lDc = 0;
+            let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono">${i.q.toLocaleString()}</td><td data-label="VCP" class="mono">$ ${i.p.toFixed(6)}</td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+            tSub += lSub; tDc += lDc;
+            const subPct = (lSub - lDc) !== 0 ? lDc / (lSub - lDc) * 100 : 0;
+            return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}">$ ${fmt(lDc)}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}">${subPct.toFixed(2)}%</td><td class="mono" style="text-align:right">$ ${fmt(lSub)}</td></tr>`;
+        };
+        const rows = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
+        return `<div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-accent-bar" style="background:var(--green)"></div>
+                    🇦🇷 Fondos Argentina
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Fondo</th><th>Cuotas</th><th>VCP</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot><tr>
+                        <td colspan="3" style="text-align:right; color:var(--text-muted)">TOTAL DÍA</td>
+                        <td class="mono ${tDc >= 0 ? 'pos' : 'neg'}">$ ${fmt(tDc)}</td>
+                        <td class="mono ${tDc >= 0 ? 'pos' : 'neg'}">${tSub !== 0 ? (tDc / tSub * 100).toFixed(2) : '0.00'}%</td>
+                        <td class="mono" style="text-align:right">$ ${fmt(tSub)}</td>
+                    </tr></tfoot>
+                </table>
+            </div>
+            <div class="card-footer">Subtotal Fondos AR: $ ${fmt(tSub)}</div>
+        </div>`;
+    }
+
+    // ─── BUILD MUTUAL CARD HTML ───
+    function buildMutualCard(label, color, data) {
+        let sub = 0, dc = 0;
+        const rows = data.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono">${i.q.toLocaleString()}</td><td data-label="Precio" class="mono">$ ${i.p.toFixed(2)}</td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}">$ ${fmt(i.dc_v)}</td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}">${i.dc_p.toFixed(2)}%</td><td data-label="Total" class="mono" style="text-align:right">$ ${fmt(i.sub)}</td></tr>`; }).join('');
+        return `<div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-accent-bar" style="background:${color}"></div>
+                    ${label}
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Fondo</th><th>Cuotas</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot><tr>
+                        <td colspan="3" style="text-align:right; color:var(--text-muted)">TOTAL DÍA</td>
+                        <td class="mono ${dc >= 0 ? 'pos' : 'neg'}">$ ${fmt(dc)}</td>
+                        <td class="mono ${dc >= 0 ? 'pos' : 'neg'}">${sub !== 0 ? (dc / sub * 100).toFixed(2) : '0.00'}%</td>
+                        <td class="mono" style="text-align:right">$ ${fmt(sub)}</td>
+                    </tr></tfoot>
+                </table>
+            </div>
+            <div class="card-footer">Subtotal: $ ${fmt(sub)}</div>
+        </div>`;
+    }
+
+    // ─── BUILD OTROS CARD HTML ───
+    function buildOtrosCard(data) {
+        const sorted = [...data].sort((a, b) => {
+            if (otrosSort.key === 'nombre') return otrosSort.asc ? a.n.localeCompare(b.n) : b.n.localeCompare(a.n);
+            return otrosSort.asc ? a.v - b.v : b.v - a.v;
+        });
+        let oSub = 0;
+        const rows = sorted.map((item, i) => {
+            const origIdx = item.idx;
+            oSub += item.v;
+            const edit = editModes.Otros;
+            return `<tr>
+                <td data-label="Concepto">${edit ? `<input class="edit-in" value="${item.n}" onchange="updateVal('OTROS',${origIdx},0,this.value)">` : `<b>${item.n}</b>`}</td>
+                <td data-label="Monto" class="mono" style="text-align:right">${edit ? `<input type="number" class="edit-in" style="text-align:right" value="${item.v}" onchange="updateVal('OTROS',${origIdx},1,this.value)">` : `$ ${fmt(item.v)}`}</td>
+                <td class="${edit ? '' : 'hidden'}">${edit ? `<button class="btn-del" onclick="delRow('OTROS',${origIdx})">×</button>` : ''}</td>
+            </tr>`;
+        }).join('');
+        const edit = editModes.Otros;
+        return `<div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-accent-bar" style="background:var(--slate)"></div>
+                    💼 Otros Activos
+                </div>
+                <div class="card-actions">
+                    ${edit ? `<button class="btn-add" onclick="addRow('OTROS')">+ Agregar</button><button class="btn-save" onclick="saveOtros()">Guardar</button>` : ''}
+                    <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th onclick="setOtrosSort('nombre')">Concepto ↕</th>
+                        <th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th>
+                        <th class="${edit ? '' : 'hidden'}"></th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div class="card-footer">Subtotal Otros: $ ${fmt(oSub)}</div>
+        </div>`;
+    }
+
+    // ─── RENDER ───
     function render() {
         let globalTotal = 0, globalDC = 0;
-        let cats = { STOCKS:[], FCI:[], MARTIN:[], JORGE:[] };
+        let cats = { STOCKS: [], FCI: [], MARTIN: [], JORGE: [] };
 
         db.main.forEach((r, index) => {
             const cat = (r[6] || "").toUpperCase().trim();
             if (!cats[cat]) return;
-            const q = parseFloat(r[1])||0, p = parseFloat(r[2])||0, dc_v = parseFloat(r[5])||0, dc_p = parseFloat(r[4])||0;
-            const isFCI = (cat === "FCI");
-            cats[cat].push({ n: r[0], q, p: isFCI ? p/1000 : p, dc_v: isFCI ? dc_v/1000 : dc_v, dc_p: Math.abs(dc_p)<1.0?dc_p*100:dc_p, sub: isFCI?(p*q)/1000:(p*q), isManual: false, source: 'main', origIndex: index });
+            const q = parseFloat(r[1]) || 0, p = parseFloat(r[2]) || 0, dc_v = parseFloat(r[5]) || 0, dc_p = parseFloat(r[4]) || 0;
+            const isFCI = cat === "FCI";
+            cats[cat].push({ n: r[0], q, p: isFCI ? p / 1000 : p, dc_v: isFCI ? dc_v / 1000 : dc_v, dc_p: Math.abs(dc_p) < 1.0 ? dc_p * 100 : dc_p, sub: isFCI ? (p * q) / 1000 : (p * q), source: 'main', origIndex: index });
         });
 
         db.extra.forEach((r, idx) => {
-            cats.STOCKS.push({ n: r[0], q: r[1], p: r[2], dc_v: r[3], dc_p: r[4], sub: r[1]*r[2], isManual: true, source: 'extra', idx });
+            cats.STOCKS.push({ n: r[0], q: r[1], p: r[2], dc_v: r[3], dc_p: r[4], sub: r[1] * r[2], source: 'extra', idx });
         });
 
-        let containerHtml = "";
+        // Compute totals
+        const stocksNet = cats.STOCKS.reduce((s, i) => s + i.sub, 0) + margin;
+        const fciSub    = cats.FCI.reduce((s, i) => s + i.sub, 0);
+        const martinSub = cats.MARTIN.reduce((s, i) => s + i.sub, 0);
+        const oSub      = (db.otros || []).reduce((s, i) => s + (parseFloat(i[1]) || 0), 0);
 
-        if (cats.STOCKS.length > 0) {
-            cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let sSub = 0, sDc = 0;
-            let rowsHtml = cats.STOCKS.map(i => {
-                sSub += i.sub; sDc += i.dc_v;
-                const canEdit = editModes.STOCKS;
-                const canDelete = editModes.STOCKS;
-                const index = i.source === 'main' ? i.origIndex : i.idx;
-                const type = i.source.toUpperCase();
-                return `<tr class="${canEdit ? 'editable' : ''}">
-                    <td>${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateNombre('${i.source}', ${index}, this.value)">` : `<b>${i.n}</b>`}</td>
-                    <td>${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateCantidad('${i.source}', ${index}, this.value)">` : i.q.toLocaleString()}</td>
-                    <td>$ ${i.p.toFixed(2)}</td>
-                    <td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td>
-                    <td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td>
-                    <td style="text-align:right;">$ ${fmt(i.sub)} ${canDelete ? `<button class="btn-del" onclick="delRow('${type}', ${index})">×</button>` : ''}</td>
-                </tr>`;
-            }).join('');
-            const net = sSub + margin;  // Valor neto de Acciones
-            globalTotal += net; globalDC += sDc;
-            const pctDiaAcciones = (net !== 0) ? (sDc / net * 100) : 0;  // CORRECCIÓN: % sobre neto (subtotal + margen)
-            containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true, pctDiaAcciones);
-        }
+        const stocksDc = cats.STOCKS.reduce((s, i) => s + i.dc_v, 0);
+        const fciDc    = cats.FCI.reduce((s, i) => s + i.dc_v, 0);
+        const martinDc = cats.MARTIN.reduce((s, i) => s + i.dc_v, 0);
 
-        if (cats.FCI.length > 0) {
-            cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
-            let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
-            let g2 = cats.FCI.filter(f => f.n.toUpperCase().includes("GALICIA"));
-            let tSub = 0, tDc = 0;
-            const processGroup = (list, label) => {
-                let lSub = 0, lDc = 0;
-                let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(6)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-                tSub += lSub; tDc += lDc;
-                return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="${lDc>=0?'pos':'neg'}">$ ${fmt(lDc)}</td><td class="${lDc>=0?'pos':'neg'}">${(lSub-lDc!==0?lDc/(lSub-lDc)*100:0).toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(lSub)}</td></tr>`;
-            };
-            let rowsFci = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
-            globalTotal += tSub; globalDC += tDc;
-            containerHtml += createCard("🇦🇷 Fondos Argentina", "var(--s)", rowsFci, tDc, tSub, tSub);
-        }
+        globalTotal = stocksNet + fciSub + martinSub + oSub;
+        globalDC    = stocksDc + fciDc + martinDc;
 
-        [ ["MARTIN", "🏦 Mutual Funds - Martín", "var(--m)"], ["JORGE", "🏦 Mutual Funds - Jorge (Info)", "var(--j)"] ].forEach(c => {
-            const list = cats[c[0]]; if (list.length === 0) return;
-            let sub = 0, dc = 0;
-            let rows = list.map(i => { sub += i.sub; dc += i.dc_v; return `<tr><td>${i.n}</td><td>${i.q.toLocaleString()}</td><td>$ ${i.p.toFixed(2)}</td><td class="${i.dc_v>=0?'pos':'neg'}">$ ${fmt(i.dc_v)}</td><td class="${i.dc_p>=0?'pos':'neg'}">${i.dc_p.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(i.sub)}</td></tr>`; }).join('');
-            if (c[0] !== "JORGE") { globalTotal += sub; globalDC += dc; }
-            containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
-        });
+        // Build cards
+        const stocksHtml  = cats.STOCKS.length > 0 ? buildStocksCard(cats.STOCKS) : '';
+        const fciHtml     = cats.FCI.length > 0    ? buildFciCard(cats.FCI)       : '';
+        const martinHtml  = cats.MARTIN.length > 0 ? buildMutualCard("🏦 Mutual Funds — Martín", "var(--amber)", cats.MARTIN) : '';
+        const jorgeHtml   = cats.JORGE.length > 0  ? buildMutualCard("🏦 Mutual Funds — Jorge (Info)", "var(--slate)", cats.JORGE) : '';
+        const otrosData   = (db.otros || []).map((item, idx) => ({ idx, n: item[0], v: parseFloat(item[1]) || 0 }));
+        const otrosHtml   = buildOtrosCard(otrosData);
 
-        let otrosData = db.otros.map((item, i) => ({
-            idx: i,
-            nombre: item[0],
-            monto: parseFloat(item[1]) || 0
-        }));
+        // Tab: Todo
+        document.getElementById('all-container').innerHTML = stocksHtml + fciHtml + martinHtml + jorgeHtml + otrosHtml;
+        document.getElementById('stocks-container').innerHTML = stocksHtml || '<p style="color:var(--text-muted); padding:20px">Sin datos de acciones.</p>';
+        document.getElementById('fci-container').innerHTML   = fciHtml || '<p style="color:var(--text-muted); padding:20px">Sin datos de fondos.</p>';
+        document.getElementById('mutual-container').innerHTML = martinHtml + jorgeHtml || '<p style="color:var(--text-muted); padding:20px">Sin datos de mutual funds.</p>';
+        document.getElementById('otros-container').innerHTML  = otrosHtml;
 
-        otrosData.sort((a, b) => {
-            if (otrosSort.key === 'nombre') {
-                return otrosSort.asc ? a.nombre.localeCompare(b.nombre) : b.nombre.localeCompare(a.nombre);
-            } else {
-                return otrosSort.asc ? a.monto - b.monto : b.monto - a.monto;
-            }
-        });
-
-        let oSub = 0;
-        let oRows = otrosData.map((item) => {
-            const originalIdx = item.idx;
-            const valor = db.otros[originalIdx][1];
-            oSub += valor;
-            
-            const nombreCell = editModes.Otros 
-                ? `<input class="edit-in" value="${db.otros[originalIdx][0]}" onchange="updateVal('OTROS',${originalIdx},0,this.value)">`
-                : `<b>${db.otros[originalIdx][0]}</b>`;
-            
-            const montoCell = editModes.Otros 
-                ? `<input type="number" class="edit-in" style="text-align:right" value="${valor}" onchange="updateVal('OTROS',${originalIdx},1,this.value)">`
-                : `$ ${fmt(valor)}`;
-            
-            const delCell = editModes.Otros 
-                ? `<button class="btn-del" onclick="delRow('OTROS',${originalIdx})">×</button>`
-                : '';
-
-            return `<tr>
-                <td>${nombreCell}</td>
-                <td style="text-align:right">${montoCell}</td>
-                <td class="${editModes.Otros ? '' : 'hidden'}">${delCell}</td>
-            </tr>`;
-        }).join('');
-
-        globalTotal += oSub;
-        containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos <span>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveOtros()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button></span></h2><div class="table-wrap"><table><thead><tr><th onclick="setOtrosSort('nombre')">Concepto ↕</th><th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div><div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div></div>`;
-
-        document.getElementById('cards-container').innerHTML = containerHtml;
+        // Header
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
-        const gPct = (globalTotal - globalDC !== 0) ? (globalDC / (globalTotal - globalDC) * 100) : 0;
-        document.getElementById('header-dc').innerHTML = `<span class="${globalDC>=0?'pos':'neg'}">$ ${fmt(globalDC)} (${gPct.toFixed(2)}%)</span>`;
-    }
+        const gPct = (globalTotal - globalDC) !== 0 ? (globalDC / (globalTotal - globalDC) * 100) : 0;
+        document.getElementById('header-dc').innerHTML = `<span class="${globalDC >= 0 ? 'pos' : 'neg'}">Cambio hoy: $ ${fmt(globalDC)} (${gPct.toFixed(2)}%)</span>`;
 
-    function createCard(title, color, rows, dc, sub, net, isStocks=false) {
-        const pct = (net !== 0) ? (dc / net * 100) : 0;  // CORRECCIÓN: % día sobre neto para Acciones
-        return `<div class="card" style="border-top-color: ${color}">
-            <h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveStocks()">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Activo</th>
-                            <th>Cant</th>
-                            <th>Precio</th>
-                            <th>Día $</th>
-                            <th>Día %</th>
-                            <th style="text-align:right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                    <tfoot>
-                        <tr style="background:#f8f9fa33; font-weight:bold;">
-                            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
-                            <td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td>
-                            <td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
-                            <td style="text-align:right;">$ ${fmt(net)}</td>
-                        </tr>
-                        ${isStocks ? `<tr style="background:rgba(239,68,68,0.08);">
-                            <td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td>
-                            <td style="text-align:right;">
-                                <input type="number" class="edit-in" style="width:120px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();">
-                            </td>
-                        </tr>` : ''}
-                    </tfoot>
-                </table>
-            </div>
-            <div class="section-total">Subtotal: $ ${fmt(net)}</div>
-        </div>`;
+        // Pills
+        document.getElementById('sum-stocks').innerHTML = `<span class="mono ${stocksNet > 0 ? '' : 'neg'}">$ ${fmt(stocksNet)}</span>`;
+        document.getElementById('sum-fci').innerHTML    = `<span class="mono">$ ${fmt(fciSub)}</span>`;
+        document.getElementById('sum-mutual').innerHTML = `<span class="mono">$ ${fmt(martinSub)}</span>`;
+        document.getElementById('sum-otros').innerHTML  = `<span class="mono">$ ${fmt(oSub)}</span>`;
     }
 
     fetchData();
