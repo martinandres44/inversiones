@@ -27,6 +27,8 @@
         .btn-add { background: var(--s); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; margin-right: 10px; }
         .btn-del { color: var(--d); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; margin-left: 5px; }
         .hidden { display: none; }
+        tr.editable td { background: #fffef5; }
+        tr.editable input { background: #fef9e7; border-color: #f1c40f; }
     </style>
 </head>
 <body>
@@ -46,6 +48,7 @@
     let db = { main: [], otros: [], extra: [] };
     let editModes = { STOCKS: false, Otros: false };
     let sortConfig = { key: 'sub', asc: false };
+    let otrosSort = { key: 'monto', asc: false };   // nuevo: orden para Otros
     const fmt = (v) => (v || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     async function fetchData() {
@@ -75,7 +78,28 @@
         else db.extra.push(["NUEVA", 0, 0, 0, 0, "STOCKS"]);
         render();
     }
-    function delRow(type, i) { if(confirm('¿Eliminar?')) { db[type.toLowerCase()].splice(i, 1); render(); } }
+    function delRow(type, i) { 
+        if(confirm('¿Eliminar?')) { 
+            db[type.toLowerCase()].splice(i, 1); 
+            render(); 
+        } 
+    }
+
+    function setSort(k) { 
+        sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false; 
+        sortConfig.key = k; 
+        render(); 
+    }
+
+    function setOtrosSort(k) {
+        if (otrosSort.key === k) {
+            otrosSort.asc = !otrosSort.asc;
+        } else {
+            otrosSort.key = k;
+            otrosSort.asc = (k === 'nombre') ? true : false;
+        }
+        render();
+    }
 
     function render() {
         let globalTotal = 0, globalDC = 0;
@@ -96,14 +120,14 @@
 
         let containerHtml = "";
 
-        // --- ACCIONES (Edición Total Habilitada) ---
+        // --- ACCIONES ---
         if (cats.STOCKS.length > 0) {
             cats.STOCKS.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let sSub = 0, sDc = 0;
             let rowsHtml = cats.STOCKS.map(i => {
                 sSub += i.sub; sDc += i.dc_v;
                 const canEdit = i.isManual && editModes.STOCKS;
-                return `<tr>
+                return `<tr class="${canEdit ? 'editable' : ''}">
                     <td>${canEdit ? `<input class="edit-in" value="${i.n}" onchange="updateVal('EXTRA',${i.idx},0,this.value)">` : `<b>${i.n}</b>`}</td>
                     <td>${canEdit ? `<input type="number" class="edit-in" value="${i.q}" onchange="updateVal('EXTRA',${i.idx},1,this.value)">` : i.q.toLocaleString()}</td>
                     <td>$ ${i.p.toFixed(2)}</td>
@@ -117,7 +141,7 @@
             containerHtml += createCard("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true);
         }
 
-        // --- FCI (DOS SECCIONES - SIN NEGRITA EN NOMBRES) ---
+        // --- FCI ---
         if (cats.FCI.length > 0) {
             cats.FCI.sort((a,b) => (sortConfig.asc?1:-1)*(a[sortConfig.key]>b[sortConfig.key]?1:-1));
             let g1 = cats.FCI.filter(f => !f.n.toUpperCase().includes("GALICIA"));
@@ -143,15 +167,74 @@
             containerHtml += createCard(c[1], c[2], rows, dc, sub, sub);
         });
 
-        // --- OTROS (SORT POR MONTO DESCENDENTE) ---
-        db.otros.sort((a, b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0));
+        // --- OTROS (con ordenamiento) ---
+        let otrosData = db.otros.map((item, i) => ({
+            idx: i,
+            nombre: item[0],
+            monto: parseFloat(item[1]) || 0
+        }));
+
+        otrosData.sort((a, b) => {
+            if (otrosSort.key === 'nombre') {
+                return otrosSort.asc 
+                    ? a.nombre.localeCompare(b.nombre) 
+                    : b.nombre.localeCompare(a.nombre);
+            } else { // monto
+                return otrosSort.asc 
+                    ? a.monto - b.monto 
+                    : b.monto - a.monto;
+            }
+        });
+
         let oSub = 0;
-        let oRows = db.otros.map((item, i) => {
-            oSub += item[1];
-            return `<tr><td>${editModes.Otros ? `<input class="edit-in" value="${item[0]}" onchange="updateVal('OTROS',${i},0,this.value)">` : `<b>${item[0]}</b>`}</td><td style="text-align:right;">${editModes.Otros ? `<input type="number" class="edit-in" style="text-align:right" value="${item[1]}" onchange="updateVal('OTROS',${i},1,this.value)">` : `$ ${fmt(item[1])}`}</td><td class="${editModes.Otros?'':'hidden'}"><button class="btn-del" onclick="delRow('OTROS',${i})">×</button></td></tr>`;
+        let oRows = otrosData.map(item => {
+            const idx = item.idx;
+            const valor = db.otros[idx][1];
+            oSub += valor;
+
+            const nombreCell = editModes.Otros 
+                ? `<input class="edit-in" value="${db.otros[idx][0]}" onchange="updateVal('OTROS',${idx},0,this.value)">`
+                : `<b>${db.otros[idx][0]}</b>`;
+
+            const montoCell = editModes.Otros 
+                ? `<input type="number" class="edit-in" style="text-align:right" value="${valor}" onchange="updateVal('OTROS',${idx},1,this.value)">`
+                : `$ ${fmt(valor)}`;
+
+            const delCell = editModes.Otros 
+                ? `<button class="btn-del" onclick="delRow('OTROS',${idx})">×</button>`
+                : '';
+
+            return `<tr>
+                <td>${nombreCell}</td>
+                <td style="text-align:right">${montoCell}</td>
+                <td class="${editModes.Otros ? '' : 'hidden'}">${delCell}</td>
+            </tr>`;
         }).join('');
+
         globalTotal += oSub;
-        containerHtml += `<div class="card" style="border-top-color: var(--o)"><h2>💼 Otros Activos <span>${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveData('OTROS')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button></span></h2><div class="table-wrap"><table><thead><tr><th>Concepto</th><th style="text-align:right">Monto</th><th class="${editModes.Otros?'':'hidden'}"></th></tr></thead><tbody>${oRows}</tbody></table></div><div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div></div>`;
+
+        containerHtml += `
+        <div class="card" style="border-top-color: var(--o)">
+            <h2>💼 Otros Activos 
+                <span>
+                    ${editModes.Otros ? `<button class="btn-add" onclick="addRow('OTROS')">+ ADD</button><button class="btn-save" onclick="saveData('OTROS')">SAVE</button>` : ''}
+                    <button class="btn-tool" onclick="toggleEdit('Otros')">✏️</button>
+                </span>
+            </h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="setOtrosSort('nombre')">Concepto ↕</th>
+                            <th onclick="setOtrosSort('monto')" style="text-align:right">Monto ↕</th>
+                            <th class="${editModes.Otros ? '' : 'hidden'}"></th>
+                        </tr>
+                    </thead>
+                    <tbody>${oRows}</tbody>
+                </table>
+            </div>
+            <div class="section-total">Subtotal Otros: $ ${fmt(oSub)}</div>
+        </div>`;
 
         document.getElementById('cards-container').innerHTML = containerHtml;
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
@@ -161,11 +244,43 @@
 
     function createCard(title, color, rows, dc, sub, net, isStocks=false) {
         const pct = (sub - dc !== 0) ? (dc / (sub - dc) * 100) : 0;
-        return `<div class="card" style="border-top-color: ${color}"><h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2><div class="table-wrap"><table><thead><tr><th onclick="setSort('n')">Activo ↕</th><th onclick="setSort('q')">Cant ↕</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right" onclick="setSort('sub')">Total ↕</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#f8f9fa; font-weight:bold;"><td colspan="3" style="text-align:right;">TOTAL DÍA:</td><td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td><td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td><td style="text-align:right;">$ ${fmt(sub)}</td></tr>${isStocks ? `<tr style="background:#fffafa;"><td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td><td style="text-align:right;"><input type="number" class="edit-in" style="width:100px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();"></td></tr>` : ''}</tfoot></table></div><div class="section-total">Subtotal: $ ${fmt(net)}</div></div>`;
+        return `<div class="card" style="border-top-color: ${color}">
+            <h2>${title} ${isStocks ? `<span>${editModes.STOCKS ? `<button class="btn-add" onclick="addRow('EXTRA')">+ ADD</button><button class="btn-save" onclick="saveData('EXTRA')">SAVE</button>` : ''} <button class="btn-tool" onclick="toggleEdit('STOCKS')">✏️</button></span>` : ''}</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="setSort('n')">Activo ↕</th>
+                            <th onclick="setSort('q')">Cant ↕</th>
+                            <th>Precio</th>
+                            <th>Día $</th>
+                            <th>Día %</th>
+                            <th style="text-align:right" onclick="setSort('sub')">Total ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr style="background:#f8f9fa; font-weight:bold;">
+                            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
+                            <td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td>
+                            <td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
+                            <td style="text-align:right;">$ ${fmt(sub)}</td>
+                        </tr>
+                        ${isStocks ? `<tr style="background:#fffafa;">
+                            <td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td>
+                            <td style="text-align:right;">
+                                <input type="number" class="edit-in" style="width:100px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();">
+                            </td>
+                        </tr>` : ''}
+                    </tfoot>
+                </table>
+            </div>
+            <div class="section-total">Subtotal: $ ${fmt(net)}</div>
+        </div>`;
     }
 
-    function setSort(k) { sortConfig.asc = (sortConfig.key === k) ? !sortConfig.asc : false; sortConfig.key = k; render(); }
-    fetchData(); setInterval(fetchData, 60000);
+    fetchData();
+    setInterval(fetchData, 60000);
 </script>
 </body>
 </html>
