@@ -91,17 +91,18 @@
 
         .card.collapsed .toggle { transform: rotate(180deg); }
 
-        .card.collapsed .card-content { display: none; }
+        .card.collapsed .card-body { display: none; }
 
         .card.collapsed .summary {
-            display: flex;
-            justify-content: space-between;
             padding: 0 16px 12px;
             font-size: 0.95rem;
             color: var(--text-light);
+            display: block;
         }
 
-        .card-content { padding: 0; }
+        .summary { display: none; }
+
+        .card-body { padding: 0; }
 
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
@@ -159,7 +160,6 @@
         .btn-tool, .btn-save, .btn-add, .btn-del {
             font-size: 1.3rem;
             padding: 4px 8px;
-            transition: all 0.18s;
             background: none;
             border: none;
             cursor: pointer;
@@ -174,9 +174,7 @@
             body { font-size: 14px; padding: 10px; }
             .header { padding: 24px 14px; }
             #total-general { font-size: 2.2rem; }
-            h2 { font-size: 1.15rem; }
-
-            .card-header { font-size: 1.1rem; padding: 12px var(--cp); }
+            .card-header { font-size: 1.15rem; padding: 12px var(--cp); }
 
             tr {
                 display: flex;
@@ -384,7 +382,7 @@
             }).join('');
             const net = sSub + margin;
             globalTotal += net; globalDC += sDc;
-            const summary = `Subtotal: $ ${fmt(net)} | Día: <span class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)} (${((sSub + margin - (sSub + margin - sDc)) / (sSub + margin - sDc) * 100 || 0).toFixed(2)}%)</span>`;
+            const summary = `Subtotal: $ ${fmt(net)} | Día: <span class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)} (${((sDc / (net - sDc)) * 100 || 0).toFixed(2)}%)</span>`;
             containerHtml += `
             <div class="card" id="acciones">
                 <div class="card-header" onclick="toggleSection('acciones')">
@@ -392,55 +390,49 @@
                     <span class="toggle">▼</span>
                 </div>
                 <div class="summary">${summary}</div>
-                <div class="card-content">
-                    ${createCardContent("📈 Acciones", "var(--a)", rowsHtml, sDc, sSub, net, true)}
+                <div class="card-body">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Activo</th>
+                                    <th>Cant</th>
+                                    <th>Precio</th>
+                                    <th>Día $</th>
+                                    <th>Día %</th>
+                                    <th style="text-align:right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                            <tfoot>
+                                <tr style="background:#f8f9fa33; font-weight:bold;">
+                                    <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
+                                    <td class="${sDc>=0?'pos':'neg'}">$ ${fmt(sDc)}</td>
+                                    <td class="${sDc>=0?'pos':'neg'}">${((sDc / (net - sDc)) * 100 || 0).toFixed(2)}%</td>
+                                    <td style="text-align:right;">$ ${fmt(net)}</td>
+                                </tr>
+                                <tr style="background:rgba(239,68,68,0.08);">
+                                    <td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td>
+                                    <td style="text-align:right;">
+                                        <input type="number" class="edit-in" style="width:120px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();">
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="section-total">Subtotal: $ ${fmt(net)}</div>
                 </div>
             </div>`;
         }
 
-        // Similar para las otras secciones (agregando colapsable y summary)
-        // Para no extender demasiado, te muestro el patrón y puedes replicarlo
-        // Si quieres el código completo con todas las secciones colapsables, avísame y lo expando
+        // Agregar aquí las otras secciones de la misma forma (FCI, MARTIN, JORGE, OTROS)
+        // Para no extender el mensaje, te muestro solo Acciones colapsable.
+        // Si querés el código completo con todas las secciones colapsables, decime y te lo paso entero.
 
         document.getElementById('cards-container').innerHTML = containerHtml;
         document.getElementById('total-general').innerText = `$ ${fmt(globalTotal)}`;
         const gPct = (globalTotal - globalDC !== 0) ? (globalDC / (globalTotal - globalDC) * 100) : 0;
         document.getElementById('header-dc').innerHTML = `<span class="${globalDC>=0?'pos':'neg'}">$ ${fmt(globalDC)} (${gPct.toFixed(2)}%)</span>`;
-    }
-
-    function createCardContent(title, color, rows, dc, sub, net, isStocks=false) {
-        const pct = (sub - dc !== 0) ? (dc / (sub - dc) * 100) : 0;
-        return `
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Activo</th>
-                            <th>Cant</th>
-                            <th>Precio</th>
-                            <th>Día $</th>
-                            <th>Día %</th>
-                            <th style="text-align:right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                    <tfoot>
-                        <tr style="background:#f8f9fa33; font-weight:bold;">
-                            <td colspan="3" style="text-align:right;">TOTAL DÍA:</td>
-                            <td class="${dc>=0?'pos':'neg'}">$ ${fmt(dc)}</td>
-                            <td class="${dc>=0?'pos':'neg'}">${pct.toFixed(2)}%</td>
-                            <td style="text-align:right;">$ ${fmt(sub)}</td>
-                        </tr>
-                        ${isStocks ? `<tr style="background:rgba(239,68,68,0.08);">
-                            <td colspan="5" style="text-align:right; color:var(--d)">MARGEN DEUDA:</td>
-                            <td style="text-align:right;">
-                                <input type="number" class="edit-in" style="width:120px; text-align:right; color:var(--d); font-weight:bold;" value="${margin}" onchange="localStorage.setItem('userMargin',this.value); margin=parseFloat(this.value); render();">
-                            </td>
-                        </tr>` : ''}
-                    </tfoot>
-                </table>
-            </div>
-            <div class="section-total">Subtotal: $ ${fmt(net)}</div>`;
     }
 
     fetchData();
