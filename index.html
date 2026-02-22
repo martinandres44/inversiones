@@ -561,9 +561,9 @@
         const c = collapseState[key] || false;
         return `<button class="collapse-btn ${c ? 'collapsed' : ''}" onclick="collapseToggle(this,'${key}')" title="Colapsar">▼</button>`;
     }
-    function cardBody(key, html) {
+    function tableBody(key, tableHtml) {
         const c = collapseState[key] || false;
-        return `<div class="card-body${c ? ' collapsed' : ''}">${html}</div>`;
+        return `<div class="card-body${c ? ' collapsed' : ''}">${tableHtml}</div>`;
     }
 
     let editModes = { STOCKS: false, Otros: false };
@@ -701,7 +701,7 @@
                     ${collapseBtn('stocks')}
                 </div>
             </div>
-            ${cardBody('stocks', `<div class="table-wrap">
+            ${tableBody('stocks', `<div class="table-wrap">
                 <table>
                     <thead><tr>
                         <th onclick="setSort('n')">Activo ↕</th>
@@ -731,8 +731,8 @@
                         </tr>
                     </tfoot>
                 </table>
-            </div>
-            <div class="card-footer">Subtotal Acciones (neto): $ ${fmt(net)}</div>`)}
+            </div>`)}
+            <div class="card-footer">Subtotal Acciones (neto): $ ${fmt(net)}</div>
         </div>`;
     }
 
@@ -757,7 +757,7 @@
                 </div>
                 <div class="card-actions">${collapseBtn('fci')}</div>
             </div>
-            ${cardBody('fci', `<div class="table-wrap">
+            ${tableBody('fci', `<div class="table-wrap">
                 <table>
                     <thead><tr><th>Fondo</th><th>Cuotas</th><th>VCP</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
                     <tbody>${rows}</tbody>
@@ -768,8 +768,8 @@
                         <td class="mono" style="text-align:right">$ ${fmt(tSub)}</td>
                     </tr></tfoot>
                 </table>
-            </div>
-            <div class="card-footer">Subtotal Fondos AR: $ ${fmt(tSub)}</div>`)}
+            </div>`)}
+            <div class="card-footer">Subtotal Fondos AR: $ ${fmt(tSub)}</div>
         </div>`;
     }
 
@@ -786,7 +786,7 @@
                 </div>
                 <div class="card-actions">${collapseBtn(mutualKey)}</div>
             </div>
-            ${cardBody(mutualKey, `<div class="table-wrap">
+            ${tableBody(mutualKey, `<div class="table-wrap">
                 <table>
                     <thead><tr><th>Fondo</th><th>Cuotas</th><th>Precio</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
                     <tbody>${rows}</tbody>
@@ -797,8 +797,8 @@
                         <td class="mono" style="text-align:right">$ ${fmt(sub)}</td>
                     </tr></tfoot>
                 </table>
-            </div>
-            <div class="card-footer">Subtotal: $ ${fmt(sub)}</div>`)}
+            </div>`)}
+            <div class="card-footer">Subtotal: $ ${fmt(sub)}</div>
         </div>`;
     }
 
@@ -832,7 +832,7 @@
                     ${collapseBtn('otros')}
                 </div>
             </div>
-            ${cardBody('otros', `<div class="table-wrap">
+            ${tableBody('otros', `<div class="table-wrap">
                 <table>
                     <thead><tr>
                         <th onclick="setOtrosSort('nombre')">Concepto ↕</th>
@@ -841,8 +841,8 @@
                     </tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
-            </div>
-            <div class="card-footer">Subtotal Otros: $ ${fmt(oSub)}</div>`)}
+            </div>`)}
+            <div class="card-footer">Subtotal Otros: $ ${fmt(oSub)}</div>
         </div>`;
     }
 
