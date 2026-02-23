@@ -1,545 +1,539 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Patrimonio Martín</title>
 
-```
-<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;Patrimonio Martín&quot;,&quot;short_name&quot;:&quot;Patrimonio&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#080c14&quot;,&quot;theme_color&quot;:&quot;#3b82f6&quot;}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Patrimonio Martín">
+    <link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;Patrimonio Martín&quot;,&quot;short_name&quot;:&quot;Patrimonio&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#080c14&quot;,&quot;theme_color&quot;:&quot;#3b82f6&quot;}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Patrimonio Martín">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 
-<style>
-    :root {
-        --bg: #080c14;
-        --surface: #0d1525;
-        --surface2: #121d30;
-        --surface3: #192338;
-        --border: #1e2d45;
-        --border-bright: #2a3f5f;
-        --text: #e8f0fe;
-        --text-muted: #6b82a8;
-        --text-dim: #3d5275;
-        --accent: #3b82f6;
-        --accent-bright: #60a5fa;
-        --accent-dim: rgba(59,130,246,0.15);
-        --green: #10b981;
-        --green-dim: rgba(16,185,129,0.15);
-        --red: #ef4444;
-        --red-dim: rgba(239,68,68,0.12);
-        --amber: #f59e0b;
-        --amber-dim: rgba(245,158,11,0.15);
-        --slate: #64748b;
-        --radius: 12px;
-        --radius-sm: 8px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-        font-family: 'Sora', sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        margin: 0;
-        padding: 0;
-        font-size: 14px;
-        line-height: 1.5;
-        min-height: 100vh;
-    }
-
-    /* ─── BACKGROUND GRID ─── */
-    body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background-image:
-            linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 16px 14px 60px; }
-
-    /* ─── HEADER ─── */
-    .header {
-        background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
-        border: 1px solid var(--border-bright);
-        border-radius: 18px;
-        padding: 28px 24px 22px;
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-    }
-    .header::after {
-        content: '';
-        position: absolute;
-        top: -40px; right: -40px;
-        width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .header-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 6px;
-    }
-    .header-total {
-        font-family: 'DM Serif Display', Georgia, serif;
-        font-size: clamp(2.4rem, 8vw, 3.6rem);
-        font-weight: 400;
-        color: #fff;
-        letter-spacing: -0.5px;
-        line-height: 1;
-    }
-    .header-dc {
-        font-family: 'Space Mono', monospace;
-        font-size: 1rem;
-        margin-top: 8px;
-    }
-    .header-meta {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-top: 16px;
-        padding-top: 14px;
-        border-top: 1px solid var(--border);
-    }
-    #sync-info {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-    }
-    .header-refresh {
-        margin-left: auto;
-        background: var(--accent-dim);
-        border: 1px solid rgba(59,130,246,0.3);
-        color: var(--accent-bright);
-        border-radius: 6px;
-        padding: 5px 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-        font-family: 'Sora', sans-serif;
-        letter-spacing: 0.5px;
-    }
-    .header-refresh:hover { background: rgba(59,130,246,0.25); }
-
-    /* ─── SUMMARY PILLS ─── */
-    .summary-strip {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .sum-pill {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-        text-align: center;
-        transition: border-color 0.2s;
-    }
-    .sum-pill:hover { border-color: var(--border-bright); }
-    .sum-pill-label {
-        font-size: 0.65rem;
-        font-weight: 600;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 4px;
-    }
-    .sum-pill-val {
-        font-family: 'Space Mono', monospace;
-        font-size: 0.72rem;
-        font-weight: 700;
-    }
-    @media(max-width:480px){
-        .summary-strip { grid-template-columns: repeat(2,1fr); }
-    }
-
-    /* ─── TABS ─── */
-    .tabs-nav {
-        display: flex;
-        gap: 4px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 4px;
-        margin-bottom: 20px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .tabs-nav::-webkit-scrollbar { display: none; }
-    .tab-btn {
-        flex: 1;
-        min-width: fit-content;
-        white-space: nowrap;
-        padding: 9px 16px;
-        background: transparent;
-        border: none;
-        border-radius: 9px;
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        font-weight: 600;
-        font-family: 'Sora', sans-serif;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .tab-btn:hover { color: var(--text); background: var(--surface2); }
-    .tab-btn.active {
-        background: var(--accent);
-        color: white;
-    }
-    .tab-badge {
-        background: rgba(255,255,255,0.2);
-        border-radius: 20px;
-        padding: 1px 6px;
-        font-size: 0.65rem;
-        font-weight: 700;
-    }
-    .tab-btn:not(.active) .tab-badge {
-        background: var(--border);
-        color: var(--text-muted);
-    }
-
-    /* ─── TAB PANES ─── */
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; animation: fadeSlide 0.25s ease; }
-    @keyframes fadeSlide {
-        from { opacity: 0; transform: translateY(6px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ─── CARD ─── */
-    .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        margin-bottom: 16px;
-        overflow: hidden;
-    }
-    .card-header {
-        padding: 14px 18px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border);
-        background: var(--surface2);
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    .card-title {
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: var(--text);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .card-accent-bar {
-        width: 3px;
-        height: 16px;
-        border-radius: 2px;
-        flex-shrink: 0;
-    }
-    .card-actions { display: flex; align-items: center; gap: 6px; }
-    .collapse-btn { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.85rem; padding:2px 6px; border-radius:4px; transition:transform 0.25s, color 0.2s; line-height:1; }
-    .collapse-btn:hover { color:var(--text); }
-    .collapse-btn.collapsed { transform: rotate(-90deg); }
-    .card-body { transition: none; }
-    .card-body.collapsed { display: none; }
-
-    /* ─── TABLE ─── */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-        padding: 9px 14px;
-        text-align: left;
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text-dim);
-        background: var(--surface);
-        cursor: pointer;
-        white-space: nowrap;
-        border-bottom: 1px solid var(--border);
-    }
-    th:hover { color: var(--text-muted); }
-    td {
-        padding: 10px 14px;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.87rem;
-        color: var(--text);
-    }
-    tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,0.02); }
-    .mono { font-family: 'Space Mono', monospace; font-size: 0.82rem; white-space: nowrap; }
-    .pos { color: var(--green) !important; font-weight: 600; }
-    .neg { color: var(--red) !important; font-weight: 600; }
-    .subtotal-row td { background: rgba(59,130,246,0.06); color: var(--accent-bright); font-weight: 700; font-size: 0.82rem; }
-    tfoot td {
-        background: var(--surface2);
-        font-weight: 700;
-        font-size: 0.82rem;
-        border-top: 1px solid var(--border-bright);
-        border-bottom: none;
-    }
-
-    /* ─── CARD FOOTER ─── */
-    .card-footer {
-        padding: 12px 18px;
-        text-align: right;
-        font-family: 'Space Mono', monospace;
-        font-size: 0.85rem;
-        font-weight: 700;
-        background: var(--surface2);
-        border-top: 1px solid var(--border);
-        color: var(--accent-bright);
-    }
-
-    /* ─── FORM ELEMENTS ─── */
-    input.edit-in {
-        background: var(--surface3);
-        border: 1px solid var(--border-bright);
-        color: var(--text) !important;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        font-family: 'Sora', sans-serif;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    input.edit-in:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px var(--accent-dim);
-    }
-
-    /* ─── BUTTONS ─── */
-    .btn-tool {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1rem;
-        padding: 4px 6px;
-        border-radius: 6px;
-        color: var(--text-muted);
-        transition: all 0.15s;
-    }
-    .btn-tool:hover { background: var(--surface3); color: var(--text); }
-    .btn-save {
-        background: var(--accent);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        font-family: 'Sora', sans-serif;
-        cursor: pointer;
-        letter-spacing: 0.5px;
-    }
-    .btn-save:hover { background: var(--accent-bright); }
-    .btn-add {
-        background: var(--green-dim);
-        color: var(--green);
-        border: 1px solid rgba(16,185,129,0.3);
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        font-family: 'Sora', sans-serif;
-        cursor: pointer;
-    }
-    .btn-add:hover { background: rgba(16,185,129,0.25); }
-    .btn-del {
-        background: none;
-        border: none;
-        color: var(--red);
-        cursor: pointer;
-        font-size: 1rem;
-        padding: 2px 4px;
-        opacity: 0.7;
-    }
-    .btn-del:hover { opacity: 1; }
-    .hidden { display: none !important; }
-
-    /* ─── MARGIN ROW ─── */
-    .margin-row td { background: var(--red-dim); color: var(--red) !important; }
-    .margin-row input.edit-in {
-        color: var(--red) !important;
-        font-weight: 700;
-        text-align: right;
-    }
-
-    /* ─── MOBILE CARDS ─── */
-    @media (max-width: 640px) {
-        .tabs-nav { gap: 2px; }
-        .tab-btn { padding: 8px 10px; font-size: 0.75rem; }
-        .table-wrap { overflow-x: hidden; }
-        table, thead, tbody, tfoot, th, td, tr { display: block; }
-        thead tr { display: none; }
-        tbody tr {
-            margin-bottom: 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--surface);
-            padding: 12px 14px;
-        }
-        tbody tr:hover { background: var(--surface2); }
-        tbody td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: none;
-            padding: 5px 0;
-            border-bottom: 1px solid var(--border);
-            gap: 8px;
-        }
-        tbody td > * { white-space: nowrap; }
-        tbody td.mono {
-            min-width: 0;
-        }
-        tbody td.mono span {
-            margin-left: auto;
-            font-variant-numeric: tabular-nums;
-            font-feature-settings: "tnum";
-            text-align: right;
-            display: inline-block;
-            white-space: nowrap;
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0d1525;
+            --surface2: #121d30;
+            --surface3: #192338;
+            --border: #1e2d45;
+            --border-bright: #2a3f5f;
+            --text: #e8f0fe;
+            --text-muted: #6b82a8;
+            --text-dim: #3d5275;
+            --accent: #3b82f6;
+            --accent-bright: #60a5fa;
+            --accent-dim: rgba(59,130,246,0.15);
+            --green: #10b981;
+            --green-dim: rgba(16,185,129,0.15);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.12);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245,158,11,0.15);
+            --slate: #64748b;
+            --radius: 12px;
+            --radius-sm: 8px;
         }
 
-        tbody td:last-child { border-bottom: none; }
-        tbody td:first-child {
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ─── BACKGROUND GRID ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 16px 14px 60px; }
+
+        /* ─── HEADER ─── */
+        .header {
+            background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+            border: 1px solid var(--border-bright);
+            border-radius: 18px;
+            padding: 28px 24px 22px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .header-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .header-total {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: clamp(2.4rem, 8vw, 3.6rem);
+            font-weight: 400;
+            color: #fff;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        .header-dc {
+            font-family: 'Space Mono', monospace;
             font-size: 1rem;
-            font-weight: 700;
-            padding-bottom: 10px;
+            margin-top: 8px;
+        }
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        #sync-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .header-refresh {
+            margin-left: auto;
+            background: var(--accent-dim);
+            border: 1px solid rgba(59,130,246,0.3);
+            color: var(--accent-bright);
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .header-refresh:hover { background: rgba(59,130,246,0.25); }
+
+        /* ─── SUMMARY PILLS ─── */
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .sum-pill {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .sum-pill:hover { border-color: var(--border-bright); }
+        .sum-pill-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
             margin-bottom: 4px;
         }
-        tbody td::before {
-            content: attr(data-label);
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+        .sum-pill-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
         }
-        .subtotal-row { border-radius: 6px !important; margin-bottom: 4px !important; }
-        /* tfoot: show as compact summary rows */
-        tfoot tr {
+        @media(max-width:480px){
+            .summary-strip { grid-template-columns: repeat(2,1fr); }
+        }
+
+        /* ─── TABS ─── */
+        .tabs-nav {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tabs-nav::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1;
+            min-width: fit-content;
+            white-space: nowrap;
+            padding: 9px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 9px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { color: var(--text); background: var(--surface2); }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        .tab-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+        .tab-btn:not(.active) .tab-badge {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+
+        /* ─── TAB PANES ─── */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeSlide 0.25s ease; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── CARD ─── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 14px;
-            border-top: 1px solid var(--border-bright);
+            border-bottom: 1px solid var(--border);
             background: var(--surface2);
+            gap: 10px;
             flex-wrap: wrap;
-            gap: 4px 12px;
         }
-        tfoot td {
-            display: inline-flex;
+        .card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
             align-items: center;
-            gap: 4px;
-            border: none;
-            padding: 2px 0;
-            background: transparent !important;
-            font-size: 0.8rem;
+            gap: 8px;
         }
-        tfoot td[colspan] { flex: 1 1 100%; color: var(--text-muted) !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
-        tfoot td:last-child { margin-left: auto; font-weight: 700; }
-        tfoot td { white-space: nowrap; }
-    }
-</style>
-```
+        .card-accent-bar {
+            width: 3px;
+            height: 16px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .card-actions { display: flex; align-items: center; gap: 6px; }
+        .collapse-btn { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.85rem; padding:2px 6px; border-radius:4px; transition:transform 0.25s, color 0.2s; line-height:1; }
+        .collapse-btn:hover { color:var(--text); }
+        .collapse-btn.collapsed { transform: rotate(-90deg); }
+        .card-body { transition: none; }
+        .card-body.collapsed { display: none; }
 
+        /* ─── TABLE ─── */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            padding: 9px 14px;
+            text-align: left;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            background: var(--surface);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        th:hover { color: var(--text-muted); }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.87rem;
+            color: var(--text);
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .mono { font-family: 'Space Mono', monospace; font-size: 0.82rem; white-space: nowrap; }
+        .pos { color: var(--green) !important; font-weight: 600; }
+        .neg { color: var(--red) !important; font-weight: 600; }
+        .subtotal-row td { background: rgba(59,130,246,0.06); color: var(--accent-bright); font-weight: 700; font-size: 0.82rem; }
+        tfoot td {
+            background: var(--surface2);
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border-bright);
+            border-bottom: none;
+        }
+
+        /* ─── CARD FOOTER ─── */
+        .card-footer {
+            padding: 12px 18px;
+            text-align: right;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            color: var(--accent-bright);
+        }
+
+        /* ─── FORM ELEMENTS ─── */
+        input.edit-in {
+            background: var(--surface3);
+            border: 1px solid var(--border-bright);
+            color: var(--text) !important;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: 'Sora', sans-serif;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input.edit-in:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn-tool {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 6px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+        .btn-tool:hover { background: var(--surface3); color: var(--text); }
+        .btn-save {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+        .btn-save:hover { background: var(--accent-bright); }
+        .btn-add {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            cursor: pointer;
+        }
+        .btn-add:hover { background: rgba(16,185,129,0.25); }
+        .btn-del {
+            background: none;
+            border: none;
+            color: var(--red);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 4px;
+            opacity: 0.7;
+        }
+        .btn-del:hover { opacity: 1; }
+        .hidden { display: none !important; }
+
+        /* ─── MARGIN ROW ─── */
+        .margin-row td { background: var(--red-dim); color: var(--red) !important; }
+        .margin-row input.edit-in {
+            color: var(--red) !important;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* ─── MOBILE CARDS ─── */
+        @media (max-width: 640px) {
+            .tabs-nav { gap: 2px; }
+            .tab-btn { padding: 8px 10px; font-size: 0.75rem; }
+            .table-wrap { overflow-x: hidden; }
+            table, thead, tbody, tfoot, th, td, tr { display: block; }
+            thead tr { display: none; }
+            tbody tr {
+                margin-bottom: 12px;
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: var(--surface);
+                padding: 12px 14px;
+            }
+            tbody tr:hover { background: var(--surface2); }
+            tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 5px 0;
+                border-bottom: 1px solid var(--border);
+                gap: 8px;
+            }
+            tbody td > * { white-space: nowrap; }
+            tbody td.mono {
+                min-width: 0;
+            }
+            tbody td.mono span {
+                margin-left: auto;
+                font-variant-numeric: tabular-nums;
+                font-feature-settings: "tnum";
+                text-align: right;
+                display: inline-block;
+                white-space: nowrap;
+            }
+
+            tbody td:last-child { border-bottom: none; }
+            tbody td:first-child {
+                font-size: 1rem;
+                font-weight: 700;
+                padding-bottom: 10px;
+                margin-bottom: 4px;
+            }
+            tbody td::before {
+                content: attr(data-label);
+                font-size: 0.65rem;
+                color: var(--text-dim);
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+            .subtotal-row { border-radius: 6px !important; margin-bottom: 4px !important; }
+            /* tfoot: show as compact summary rows */
+            tfoot tr {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 14px;
+                border-top: 1px solid var(--border-bright);
+                background: var(--surface2);
+                flex-wrap: wrap;
+                gap: 4px 12px;
+            }
+            tfoot td {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                border: none;
+                padding: 2px 0;
+                background: transparent !important;
+                font-size: 0.8rem;
+            }
+            tfoot td[colspan] { flex: 1 1 100%; color: var(--text-muted) !important; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+            tfoot td:last-child { margin-left: auto; font-weight: 700; }
+            tfoot td { white-space: nowrap; }
+        }
+    </style>
 </head>
 <body>
 <div class="app">
 
-```
-<!-- HEADER -->
-<div class="header">
-    <div class="header-label">Patrimonio Consolidado — Martín</div>
-    <div class="header-total" id="total-general">$ 0,00</div>
-    <div id="header-dc" class="header-dc">—</div>
-    <div class="header-meta">
-        <div id="sync-info">Sincronizando...</div>
-        <button class="header-refresh" onclick="fetchData()">↻ Actualizar</button>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-label">Patrimonio Consolidado — Martín</div>
+        <div class="header-total" id="total-general">$ 0,00</div>
+        <div id="header-dc" class="header-dc">—</div>
+        <div class="header-meta">
+            <div id="sync-info">Sincronizando...</div>
+            <button class="header-refresh" onclick="fetchData()">↻ Actualizar</button>
+        </div>
     </div>
-</div>
 
-<!-- SUMMARY PILLS -->
-<div class="summary-strip" id="summary-strip">
-    <div class="sum-pill">
-        <div class="sum-pill-label">Acciones</div>
-        <div class="sum-pill-val" id="sum-stocks">—</div>
+    <!-- SUMMARY PILLS -->
+    <div class="summary-strip" id="summary-strip">
+        <div class="sum-pill">
+            <div class="sum-pill-label">Acciones</div>
+            <div class="sum-pill-val" id="sum-stocks">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Fondos AR</div>
+            <div class="sum-pill-val" id="sum-fci">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Mutual Funds</div>
+            <div class="sum-pill-val" id="sum-mutual">—</div>
+        </div>
+        <div class="sum-pill">
+            <div class="sum-pill-label">Otros Activos</div>
+            <div class="sum-pill-val" id="sum-otros">—</div>
+        </div>
     </div>
-    <div class="sum-pill">
-        <div class="sum-pill-label">Fondos AR</div>
-        <div class="sum-pill-val" id="sum-fci">—</div>
-    </div>
-    <div class="sum-pill">
-        <div class="sum-pill-label">Mutual Funds</div>
-        <div class="sum-pill-val" id="sum-mutual">—</div>
-    </div>
-    <div class="sum-pill">
-        <div class="sum-pill-label">Otros Activos</div>
-        <div class="sum-pill-val" id="sum-otros">—</div>
-    </div>
-</div>
 
-<!-- TABS -->
-<div class="tabs-nav" id="tabs-nav">
-    <button class="tab-btn active" data-tab="tab-all" onclick="switchTab(this)">
-        🌐 Todo
-    </button>
-    <button class="tab-btn" data-tab="tab-stocks" onclick="switchTab(this)">
-        📈 Acciones
-    </button>
-    <button class="tab-btn" data-tab="tab-fci" onclick="switchTab(this)">
-        🇦🇷 Fondos AR
-    </button>
-    <button class="tab-btn" data-tab="tab-mutual" onclick="switchTab(this)">
-        🏦 Mutual
-    </button>
-    <button class="tab-btn" data-tab="tab-otros" onclick="switchTab(this)">
-        💼 Otros
-    </button>
-</div>
+    <!-- TABS -->
+    <div class="tabs-nav" id="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-all" onclick="switchTab(this)">
+            🌐 Todo
+        </button>
+        <button class="tab-btn" data-tab="tab-stocks" onclick="switchTab(this)">
+            📈 Acciones
+        </button>
+        <button class="tab-btn" data-tab="tab-fci" onclick="switchTab(this)">
+            🇦🇷 Fondos AR
+        </button>
+        <button class="tab-btn" data-tab="tab-mutual" onclick="switchTab(this)">
+            🏦 Mutual
+        </button>
+        <button class="tab-btn" data-tab="tab-otros" onclick="switchTab(this)">
+            💼 Otros
+        </button>
+    </div>
 
-<!-- TAB PANES -->
-<div id="tab-all" class="tab-pane active">
-    <div id="all-container"></div>
-</div>
-<div id="tab-stocks" class="tab-pane">
-    <div id="stocks-container"></div>
-</div>
-<div id="tab-fci" class="tab-pane">
-    <div id="fci-container"></div>
-</div>
-<div id="tab-mutual" class="tab-pane">
-    <div id="mutual-container"></div>
-</div>
-<div id="tab-otros" class="tab-pane">
-    <div id="otros-container"></div>
-</div>
-```
+    <!-- TAB PANES -->
+    <div id="tab-all" class="tab-pane active">
+        <div id="all-container"></div>
+    </div>
+    <div id="tab-stocks" class="tab-pane">
+        <div id="stocks-container"></div>
+    </div>
+    <div id="tab-fci" class="tab-pane">
+        <div id="fci-container"></div>
+    </div>
+    <div id="tab-mutual" class="tab-pane">
+        <div id="mutual-container"></div>
+    </div>
+    <div id="tab-otros" class="tab-pane">
+        <div id="otros-container"></div>
+    </div>
 
 </div>
 
@@ -740,13 +734,22 @@
     function buildFciCard(data) {
         const g1 = data.filter(f => !f.n.toUpperCase().includes("GALICIA"));
         const g2 = data.filter(f => f.n.toUpperCase().includes("GALICIA"));
-        let tSub = 0, tDc = 0;
+        let tSub = 0, tDc = 0, tGan = 0;
         const processGroup = (list, label) => {
-            let lSub = 0, lDc = 0;
-            let h = list.map(i => { lSub += i.sub; lDc += i.dc_v; return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono"><span>${i.q.toLocaleString()}</span></td><td data-label="VCP" class="mono"><span>$ ${i.p.toFixed(6)}</span></td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}"><span>${fmtSigned(i.dc_v, '$ ')}</span></td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}"><span>${fmtPct(i.dc_p)}</span></td><td data-label="Total" class="mono" style="text-align:right"><span>$ ${fmt(i.sub)}</span></td></tr>`; }).join('');
-            tSub += lSub; tDc += lDc;
+            let lSub = 0, lDc = 0, lGan = 0;
+            let h = list.map(i => {
+                lSub += i.sub; lDc += i.dc_v;
+                const gan = i.costo ? (i.p - i.costo) * i.q : null;
+                const ganPct = (i.costo && i.costo !== 0) ? ((i.p - i.costo) / i.costo * 100) : null;
+                if (gan !== null) lGan += gan;
+                const ganHtml = gan !== null
+                    ? `<span class="${gan >= 0 ? 'pos' : 'neg'}">${fmtSigned(gan, '$ ')} (${fmtPct(ganPct)})</span>`
+                    : `<span style="color:var(--text-dim)">—</span>`;
+                return `<tr><td data-label="Fondo">${i.n}</td><td data-label="Cuotas" class="mono"><span>${i.q.toLocaleString()}</span></td><td data-label="VCP" class="mono"><span>$ ${i.p.toFixed(6)}</span></td><td data-label="Día $" class="mono ${i.dc_v >= 0 ? 'pos' : 'neg'}"><span>${fmtSigned(i.dc_v, '$ ')}</span></td><td data-label="Día %" class="mono ${i.dc_p >= 0 ? 'pos' : 'neg'}"><span>${fmtPct(i.dc_p)}</span></td><td data-label="Ganancia" class="mono">${ganHtml}</td><td data-label="Total" class="mono" style="text-align:right"><span>$ ${fmt(i.sub)}</span></td></tr>`;
+            }).join('');
+            tSub += lSub; tDc += lDc; tGan += lGan;
             const subPct = (lSub - lDc) !== 0 ? lDc / (lSub - lDc) * 100 : 0;
-            return h + `<tr class="subtotal-row"><td colspan="3">SUBTOTAL ${label}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}"><span>${fmtSigned(lDc, '$ ')}</span></td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}"><span>${fmtPct(subPct)}</span></td><td class="mono" style="text-align:right"><span>$ ${fmt(lSub)}</span></td></tr>`;
+            return h + `<tr class="subtotal-row"><td colspan="4">SUBTOTAL ${label}</td><td class="mono ${lDc >= 0 ? 'pos' : 'neg'}"><span>${fmtPct(subPct)}</span></td><td class="mono ${lGan >= 0 ? 'pos' : 'neg'}"><span>$ ${fmt(lGan)}</span></td><td class="mono" style="text-align:right"><span>$ ${fmt(lSub)}</span></td></tr>`;
         };
         const rows = processGroup(g1, "OTROS FCI") + (g2.length > 0 ? processGroup(g2, "GALICIA") : "");
         return `<div class="card">
@@ -759,17 +762,18 @@
             </div>
             ${tableBody('fci', `<div class="table-wrap">
                 <table>
-                    <thead><tr><th>Fondo</th><th>Cuotas</th><th>VCP</th><th>Día $</th><th>Día %</th><th style="text-align:right">Total</th></tr></thead>
+                    <thead><tr><th>Fondo</th><th>Cuotas</th><th>VCP</th><th>Día $</th><th>Día %</th><th>Ganancia Acum.</th><th style="text-align:right">Total</th></tr></thead>
                     <tbody>${rows}</tbody>
                     <tfoot><tr>
                         <td colspan="3" style="text-align:right; color:var(--text-muted)">TOTAL DÍA</td>
                         <td class="mono ${tDc >= 0 ? 'pos' : 'neg'}">$ ${fmt(tDc)}</td>
                         <td class="mono ${tDc >= 0 ? 'pos' : 'neg'}">${tSub !== 0 ? (tDc / tSub * 100).toFixed(2) : '0.00'}%</td>
+                        <td class="mono ${tGan >= 0 ? 'pos' : 'neg'}">$ ${fmt(tGan)}</td>
                         <td class="mono" style="text-align:right">$ ${fmt(tSub)}</td>
                     </tr></tfoot>
                 </table>
             </div>`)}
-            <div class="card-footer">Subtotal Fondos AR: $ ${fmt(tSub)}</div>
+            <div class="card-footer">Subtotal Fondos AR: $ ${fmt(tSub)} &nbsp;·&nbsp; Ganancia: <span class="${tGan >= 0 ? 'pos' : 'neg'}">$ ${fmt(tGan)}</span></div>
         </div>`;
     }
 
@@ -856,7 +860,9 @@
             if (!cats[cat]) return;
             const q = parseFloat(r[1]) || 0, p = parseFloat(r[2]) || 0, dc_v = parseFloat(r[5]) || 0, dc_p = parseFloat(r[4]) || 0;
             const isFCI = cat === "FCI";
-            cats[cat].push({ n: r[0], q, p: isFCI ? p / 1000 : p, dc_v: isFCI ? dc_v / 1000 : dc_v, dc_p: Math.abs(dc_p) < 1.0 ? dc_p * 100 : dc_p, sub: isFCI ? (p * q) / 1000 : (p * q), source: 'main', origIndex: index });
+            const costo_raw = parseFloat(r[7]) || 0;
+            const costo = isFCI ? costo_raw / 1000 : costo_raw;
+            cats[cat].push({ n: r[0], q, p: isFCI ? p / 1000 : p, dc_v: isFCI ? dc_v / 1000 : dc_v, dc_p: Math.abs(dc_p) < 1.0 ? dc_p * 100 : dc_p, sub: isFCI ? (p * q) / 1000 : (p * q), costo, source: 'main', origIndex: index });
         });
 
         db.extra.forEach((r, idx) => {
@@ -906,6 +912,5 @@
     fetchData();
     setInterval(fetchData, 60000);
 </script>
-
 </body>
 </html>
