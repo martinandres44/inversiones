@@ -256,6 +256,45 @@
             flex-shrink: 0;
         }
         .card-actions { display: flex; align-items: center; gap: 6px; }
+        .history-bar {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px;
+            background: var(--surface2, #1a1f2e);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .history-bar label { font-size: 0.75rem; color: var(--text-muted); }
+        .history-bar input[type=date] {
+            background: var(--bg, #0d1117);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+        }
+        .history-bar button {
+            background: var(--accent);
+            color: #fff; border: none; border-radius: 8px;
+            padding: 6px 12px; font-size: 0.78rem; cursor: pointer;
+        }
+        .history-banner {
+            display: none;
+            padding: 10px 20px;
+            background: rgba(233,196,106,0.12);
+            border-bottom: 1px solid var(--amber, #e9c46a);
+            font-size: 0.82rem;
+            color: var(--amber, #e9c46a);
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .history-banner.visible { display: flex; }
+        .history-banner button {
+            background: none; border: 1px solid var(--amber, #e9c46a);
+            color: var(--amber, #e9c46a); border-radius: 8px;
+            padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+        }
         .collapse-btn { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.85rem; padding:2px 6px; border-radius:4px; transition:transform 0.25s, color 0.2s; line-height:1; }
         .collapse-btn:hover { color:var(--text); }
         .collapse-btn.collapsed { transform: rotate(-90deg); }
@@ -479,6 +518,17 @@
         </div>
     </div>
 
+    <!-- HISTORY BAR -->
+    <div class="history-bar">
+        <label>📅 Ver tenencia al:</label>
+        <input type="date" id="history-date">
+        <button onclick="viewHistoryDate()">Ver</button>
+    </div>
+    <div class="history-banner" id="history-banner">
+        <span id="history-banner-text"></span>
+        <button onclick="exitHistoryView()">Volver a hoy</button>
+    </div>
+
     <!-- SUMMARY PILLS -->
     <div class="summary-strip" id="summary-strip">
         <div class="sum-pill">
@@ -538,9 +588,9 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2_lXqHUObQPxtt9nMccpxd56Bw-62OQxX8Cf1DHmWOgE0NbMraSTGoYkw0v_k1syJXA/exec";
-    let margin = parseFloat(localStorage.getItem('userMargin')) || -269051;
-    let db = { main: [], otros: [], extra: [] };
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVRSqK1Jm_fCtH2f7bicE7hYIdhiM00ZAzJHR7ubhGg8htXsLF709TQv1cpjIDWHJrLA/exec";
+    let margin = 0; // se carga desde la sheet (CONFIG) en fetchData()
+    let db = { main: [], otros: [], extra: [], historico: [] };
     // ─── COLLAPSE ───
     const collapseState = JSON.parse(localStorage.getItem('martin_collapse') || '{}');
     function saveCollapse() { localStorage.setItem('martin_collapse', JSON.stringify(collapseState)); }
@@ -587,11 +637,60 @@
             if (!db.otros || db.otros.length === 0) {
                 db.otros = [["Pension Plan", 55000], ["Bonus", 40000], ["Caja Seguridad (Lagartos)", 20700], ["Caja Seguridad (Bebu)", 28000]];
             }
+            margin = parseFloat(db.margin) || 0;
             render();
             const now = new Date();
             document.getElementById('sync-info').innerText = `Sync ✓ ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
         } catch (e) {
             document.getElementById('sync-info').innerText = "Error de sincronización ✗";
+        }
+    }
+
+    // ─── VISTA HISTÓRICA ───
+    function viewHistoryDate() {
+        const dateInput = document.getElementById('history-date').value;
+        if (!dateInput) return;
+        const hist = (db.historico || []).find(h => h.fecha === dateInput);
+        const banner = document.getElementById('history-banner');
+        const bannerText = document.getElementById('history-banner-text');
+
+        if (!hist) {
+            banner.classList.add('visible');
+            banner.style.background = 'rgba(193,18,31,0.12)';
+            banner.style.borderColor = 'var(--red)';
+            bannerText.style.color = 'var(--red)';
+            bannerText.innerText = `⚠️ No hay snapshot guardado para ${dateInput}.`;
+            return;
+        }
+
+        banner.classList.add('visible');
+        banner.style.background = 'rgba(233,196,106,0.12)';
+        banner.style.borderColor = 'var(--amber, #e9c46a)';
+        bannerText.style.color = 'var(--amber, #e9c46a)';
+        bannerText.innerHTML = `📅 Viendo tenencia del <b>${dateInput}</b> — Total: <b>$ ${fmt(hist.total)}</b>`;
+
+        document.getElementById('total-general').innerText = `$ ${fmt(hist.total)}`;
+        document.getElementById('header-dc').innerHTML = `<span style="color:var(--text-muted)">Snapshot histórico — no refleja variación diaria</span>`;
+
+        document.getElementById('sum-stocks').innerHTML = `<span class="mono">$ ${fmt(hist.stocks)}</span>`;
+        document.getElementById('sum-fci').innerHTML    = `<span class="mono">$ ${fmt(hist.fci)}</span>`;
+        document.getElementById('sum-mutual').innerHTML = `<span class="mono">$ ${fmt(hist.mutual)}</span>`;
+        document.getElementById('sum-otros').innerHTML  = `<span class="mono">$ ${fmt(hist.otros)}</span>`;
+    }
+
+    function exitHistoryView() {
+        document.getElementById('history-banner').classList.remove('visible');
+        document.getElementById('history-date').value = '';
+        render();
+    }
+
+    async function saveMargin(val) {
+        document.getElementById('sync-info').innerText = "Guardando margen...";
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'MARGIN', data: { value: val } }) });
+            document.getElementById('sync-info').innerText = "Margen guardado ✓";
+        } catch (e) {
+            document.getElementById('sync-info').innerText = "Error al guardar margen ✗";
         }
     }
 
@@ -719,7 +818,7 @@
                                 <input type="text" class="edit-in" id="margin-input" style="width:140px; text-align:right; color:var(--red); font-weight:700; font-family:'Space Mono',monospace;"
                                     value="${fmt(margin)}"
                                     onfocus="this.value=margin; this.type='number';"
-                                    onblur="this.type='text'; margin=parseFloat(this.value)||0; localStorage.setItem('userMargin',margin); this.value=fmt(margin); render();"
+                                    onblur="this.type='text'; margin=parseFloat(this.value)||0; this.value=fmt(margin); render(); saveMargin(margin);"
                                     onkeydown="if(event.key==='Enter'){this.blur();}">
                             </td>
                         </tr>
@@ -911,6 +1010,7 @@
 
     fetchData();
     setInterval(fetchData, 60000);
+    document.getElementById('history-date').max = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>
